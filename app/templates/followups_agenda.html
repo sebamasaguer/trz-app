@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1500px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media (max-width: 1280px){.grid{grid-template-columns:1fr 1fr}}
+  @media (max-width: 720px){.grid{grid-template-columns:1fr}}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:16px}
+  .cardx h2{font-size:18px;font-weight:900;margin:0 0 12px}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+  .actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .tag{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;margin-top:8px}
+  .p-baja{background:rgba(99,118,128,.22)}
+  .p-media{background:rgba(166,109,0,.22)}
+  .p-alta{background:rgba(181,79,153,.22)}
+  .p-critica{background:rgba(198,40,40,.22)}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Agenda comercial</h1>
+      <div class="sub">Próximos contactos y vencimientos.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/followups/kanban">Kanban</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Vista tabla</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    {% for title, rows, key in [
+      ('Vencidos', vencidos, 'vencidos'),
+      ('Hoy', hoy_rows, 'hoy'),
+      ('Esta semana', semana, 'semana'),
+      ('Sin fecha', sin_fecha, 'sin_fecha')
+    ] %}
+    <div class="cardx">
+      <h2>{{ title }} ({{ rows|length }})</h2>
+      <div class="list">
+        {% for row in rows %}
+        {% set act = row_actions.get(row.id, {}) %}
+        <div class="item">
+          <div><strong>{{ row.student.full_name if row.student else "-" }}</strong></div>
+          <div class="meta">{{ row.kind.value }} · {{ row.channel.value }}</div>
+          <div class="meta">{{ row.title or "-" }}</div>
+          <div class="meta">Fecha: {{ row.next_contact_date.strftime("%d/%m/%Y") if row.next_contact_date else "-" }}</div>
+          {% if row.result_summary %}
+          <div class="meta">Resultado: {{ row.result_summary }}</div>
+          {% endif %}
+          <span class="tag p-{{ row.priority.value|lower }}">{{ row.priority.value }}</span>
+
+          <div class="actions">
+            <a class="btn btn-sm btn-outline-secondary" href="/admin/followups/{{ row.id }}/edit">Editar</a>
+
+            {% if row.student %}
+            <a class="btn btn-sm btn-outline-secondary" href="/admin/alumnos/{{ row.student.id }}/followups">Historial</a>
+            <a class="btn btn-sm btn-outline-secondary" href="/admin/alumnos/{{ row.student.id }}/actions">Acciones</a>
+            {% endif %}
+
+            <form method="post" action="/admin/followups/{{ row.id }}/send-whatsapp" style="display:inline">
+              <button class="btn btn-sm btn-outline-secondary" type="submit">Enviar WhatsApp</button>
+            </form>
+
+            <form method="post" action="/admin/followups/{{ row.id }}/send-email" style="display:inline">
+              <button class="btn btn-sm btn-outline-secondary" type="submit">Enviar Email</button>
+            </form>
+
+            {% if act.message %}
+            <button class="btn btn-sm btn-outline-secondary" type="button" onclick='copyText({{ act.message|tojson }})'>Copiar</button>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div class="item">Sin registros.</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  function copyText(text) {
+    navigator.clipboard.writeText(text || "").then(() => {
+      alert("Mensaje copiado");
+    });
+  }
+</script>
+
+{% endblock %}

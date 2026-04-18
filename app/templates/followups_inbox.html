@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1450px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .filters{display:grid;grid-template-columns:2fr 1fr 150px auto;gap:12px;align-items:end;margin-bottom:16px}
+  @media (max-width:900px){.filters{grid-template-columns:1fr}}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.72;margin:0 0 8px}
+  .inp,.sel{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+  .payload{margin-top:10px;white-space:pre-wrap;line-height:1.45}
+  .actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .tag{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+  .s-respondio{background:rgba(66,133,244,.22)}
+  .s-reactivado{background:rgba(46,204,113,.22)}
+  .s-descartado{background:rgba(231,76,60,.22)}
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+  .pager-info{opacity:.76;font-size:14px}
+  .pager-actions{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Bandeja de respuestas</h1>
+      <div class="sub">Centraliza respuestas entrantes, reactivaciones y descartes.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/followups/dashboard">Dashboard</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups/automation">Automatizaciones</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Seguimientos</a>
+    </div>
+  </div>
+
+  <div class="cardx">
+    <form method="get" class="filters">
+      <div>
+        <label class="lbl">Buscar</label>
+        <input class="inp" type="text" name="q" value="{{ q }}" placeholder="Alumno, email, teléfono, mensaje...">
+      </div>
+      <div>
+        <label class="lbl">Estado</label>
+        <select class="sel" name="status">
+          <option value="">Todos</option>
+          {% for s in statuses %}
+            <option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Por página</label>
+        <select class="sel" name="page_size">
+          {% for size in [10,25,50,100] %}
+            <option value="{{ size }}" {% if pagination.page_size == size %}selected{% endif %}>{{ size }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <button class="btn btn-primary" type="submit">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="list">
+      {% for action in actions %}
+        {% set f = followup_map.get(action.followup_id) %}
+        {% set student = f.student if f and f.student else None %}
+        <div class="item">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <div><strong>{{ student.full_name if student else "-" }}</strong></div>
+              <div class="meta">
+                {{ student.email if student else "-" }}
+                {% if student and student.phone %} · {{ student.phone }}{% endif %}
+              </div>
+              <div class="meta">
+                {{ action.created_at.strftime("%d/%m/%Y %H:%M") if action.created_at else "-" }}
+              </div>
+            </div>
+
+            {% if f %}
+              <div>
+                <span class="tag s-{{ f.status.value|lower }}">{{ f.status.value }}</span>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if f %}
+            <div class="meta" style="margin-top:10px">
+              Seguimiento: {{ f.title or "Sin título" }} · Tipo: {{ f.kind.value }} · Canal: {{ f.channel.value }}
+            </div>
+          {% endif %}
+
+          {% if action.summary %}
+            <div class="meta" style="margin-top:8px"><strong>{{ action.summary }}</strong></div>
+          {% endif %}
+
+          {% if action.payload_text %}
+            <div class="payload">{{ action.payload_text }}</div>
+          {% endif %}
+
+          <div class="actions">
+            {% if f %}
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/followups/{{ f.id }}/edit">Abrir seguimiento</a>
+            {% endif %}
+            {% if student %}
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/alumnos/{{ student.id }}/followups">Historial</a>
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/alumnos/{{ student.id }}/actions">Acciones</a>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="item">No hay respuestas registradas.</div>
+      {% endfor %}
+    </div>
+
+    <div class="pager">
+      <div class="pager-info">
+        Mostrando {{ pagination.from_item }} a {{ pagination.to_item }} de {{ pagination.total }} registros
+      </div>
+      <div class="pager-actions">
+        {% if pagination.has_prev %}
+        <a class="btn btn-sm btn-outline-secondary"
+           href="?q={{ q|urlencode }}&status={{ status|urlencode }}&page_size={{ pagination.page_size }}&page={{ pagination.prev_page }}">
+          Anterior
+        </a>
+        {% endif %}
+        <span class="btn btn-sm btn-outline-secondary disabled">Página {{ pagination.page }} / {{ pagination.total_pages }}</span>
+        {% if pagination.has_next %}
+        <a class="btn btn-sm btn-outline-secondary"
+           href="?q={{ q|urlencode }}&status={{ status|urlencode }}&page_size={{ pagination.page_size }}&page={{ pagination.next_page }}">
+          Siguiente
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

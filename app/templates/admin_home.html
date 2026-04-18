@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1440px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:42px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+  .cardx{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    border-radius:22px;
+    padding:18px;
+  }
+
+  .filters{
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    gap:12px;
+    margin-bottom:18px;
+    align-items:end;
+  }
+  @media (max-width: 760px){.filters{grid-template-columns:1fr}}
+
+  .lbl{
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    opacity:.72;
+    margin:0 0 8px;
+  }
+
+  .inp{
+    width:100%;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);
+    background:#2a2f36;
+    color:#fff;
+  }
+
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:16px;
+    margin-bottom:18px;
+  }
+  @media (max-width: 1200px){.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width: 760px){.kpis{grid-template-columns:1fr}}
+
+  .kpi-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.72}
+  .kpi-value{font-size:34px;font-weight:900;margin-top:8px;line-height:1}
+  .kpi-sub{margin-top:8px;font-size:13px;opacity:.7}
+
+  .alerts{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+  .alertx{
+    border-radius:16px;
+    padding:14px 16px;
+    border:1px solid rgba(255,255,255,.08);
+    text-decoration:none;
+    color:#fff;
+    display:block;
+  }
+  .alertx.alta{background:rgba(198,40,40,.16);border-color:rgba(198,40,40,.35)}
+  .alertx.info{background:rgba(31,111,193,.16);border-color:rgba(31,111,193,.35)}
+  .alertx .t{font-weight:900}
+  .alertx .s{opacity:.78;margin-top:4px}
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1.25fr 1fr;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  @media (max-width: 980px){.grid2{grid-template-columns:1fr}}
+
+  .section-title{font-size:20px;font-weight:900;margin:0 0 14px}
+
+  .bucket-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  @media (max-width: 1150px){.bucket-grid{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width: 760px){.bucket-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width: 520px){.bucket-grid{grid-template-columns:1fr}}
+
+  .bucket{
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    background:rgba(255,255,255,.03);
+    padding:16px;
+    text-decoration:none;
+    color:inherit;
+    transition:.15s ease;
+    display:block;
+  }
+  .bucket:hover{
+    border-color:rgba(181,79,153,.45);
+    background:rgba(181,79,153,.08);
+    transform:translateY(-1px);
+  }
+  .bucket .t{font-size:13px;opacity:.72}
+  .bucket .v{font-size:28px;font-weight:900;margin-top:8px;line-height:1}
+
+  .two-cols{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  @media (max-width: 980px){.two-cols{grid-template-columns:1fr}}
+
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    padding:12px 14px;
+    background:rgba(255,255,255,.03);
+  }
+  .item .name{font-weight:800;line-height:1.2}
+  .item .meta{opacity:.72;font-size:14px;margin-top:4px}
+  .pill{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+    background:rgba(181,79,153,.18);
+    color:#fff;
+    margin-top:8px;
+  }
+
+  .chart-box{
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:16px;
+    background:rgba(255,255,255,.03);
+  }
+
+  .bars{
+    display:flex;
+    align-items:flex-end;
+    gap:6px;
+    min-height:220px;
+    margin-top:14px;
+    overflow-x:auto;
+    padding-bottom:8px;
+  }
+
+  .bar-wrap{
+    min-width:22px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+
+  .bar{
+    width:22px;
+    border-radius:8px 8px 4px 4px;
+    background:linear-gradient(180deg, rgba(202,90,166,.95), rgba(160,68,141,.95));
+    min-height:6px;
+  }
+
+  .bar-label{font-size:11px;opacity:.72}
+  .bar-value{font-size:11px;font-weight:800;opacity:.82}
+
+  .mini-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  .mini-table th,.mini-table td{
+    padding:10px 8px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    text-align:left;
+  }
+  .mini-table th{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    opacity:.72;
+  }
+
+  .actions-row{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Panel general</h1>
+      <div class="sub">Resumen operativo, evolución mensual y seguimiento comercial.</div>
+    </div>
+
+    <div class="top-actions">
+      <a class="btn btn-outline-secondary" href="/admin/home/inactivos">Ver inactivos</a>
+      <a class="btn btn-outline-secondary" href="/admin/home/morosos">Ver morosos</a>
+      <a class="btn btn-outline-secondary" href="/admin/memberships/report">Reporte membresías</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Seguimiento</a>
+    </div>
+  </div>
+
+  <div class="cardx" style="margin-bottom:18px">
+    <form method="get" class="filters">
+      <div>
+        <label class="lbl">Fecha desde</label>
+        <input class="inp" type="date" name="date_from" value="{{ date_from.isoformat() }}">
+      </div>
+      <div>
+        <label class="lbl">Fecha hasta</label>
+        <input class="inp" type="date" name="date_to" value="{{ date_to.isoformat() }}">
+      </div>
+      <div>
+        <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+      </div>
+    </form>
+  </div>
+
+  {% if alertas %}
+  <div class="alerts">
+    {% for a in alertas %}
+      <a class="alertx {{ a.level }}" href="{{ a.href }}">
+        <div class="t">{{ a.title }}</div>
+        <div class="s">{{ a.text }}</div>
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="kpis">
+    <div class="cardx">
+      <div class="kpi-label">Alumnos activos</div>
+      <div class="kpi-value">{{ total_alumnos }}</div>
+      <div class="kpi-sub">Base total activa</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-label">Presencias hoy</div>
+      <div class="kpi-value">{{ presencias_hoy }}</div>
+      <div class="kpi-sub">{{ today.strftime("%d/%m/%Y") }}</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-label">Presencias en rango</div>
+      <div class="kpi-value">{{ presencias_rango }}</div>
+      <div class="kpi-sub">{{ date_from.strftime("%d/%m/%Y") }} a {{ date_to.strftime("%d/%m/%Y") }}</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-label">Inactivos</div>
+      <div class="kpi-value">{{ total_inactivos }}</div>
+      <div class="kpi-sub">Sin asistencia reciente</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-label">Cuotas vencidas</div>
+      <div class="kpi-value">{{ cuotas_vencidas_count }}</div>
+      <div class="kpi-sub">Seguimiento prioritario</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="cardx">
+      <h2 class="section-title">Asistencia e inactividad</h2>
+      <div class="bucket-grid">
+        <a class="bucket" href="/admin/home/inactivos?bucket=0">
+          <div class="t">Activos recientes</div>
+          <div class="v">{{ activos_recientes }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=1">
+          <div class="t">No vienen hace 1 mes</div>
+          <div class="v">{{ inactivos_bucket["1"]|length }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=2">
+          <div class="t">No vienen hace 2 meses</div>
+          <div class="v">{{ inactivos_bucket["2"]|length }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=3">
+          <div class="t">No vienen hace 3 meses</div>
+          <div class="v">{{ inactivos_bucket["3"]|length }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=4">
+          <div class="t">No vienen hace 4 meses</div>
+          <div class="v">{{ inactivos_bucket["4"]|length }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=5">
+          <div class="t">No vienen hace 5 meses</div>
+          <div class="v">{{ inactivos_bucket["5"]|length }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=6+">
+          <div class="t">No vienen hace 6+ meses</div>
+          <div class="v">{{ inactivos_bucket["6+"]|length }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=nunca">
+          <div class="t">Nunca asistieron</div>
+          <div class="v">{{ inactivos_bucket["nunca"]|length }}</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h2 class="section-title">Panel comercial</h2>
+      <div class="bucket-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="bucket">
+          <div class="t">Total a contactar</div>
+          <div class="v">{{ seguimiento.total_contactar }}</div>
+        </div>
+        <a class="bucket" href="/admin/home/morosos">
+          <div class="t">Morosos prioridad alta</div>
+          <div class="v">{{ seguimiento.morosos_alta }}</div>
+        </a>
+        <a class="bucket" href="/admin/home/inactivos?bucket=6+">
+          <div class="t">Inactivos críticos</div>
+          <div class="v">{{ seguimiento.inactivos_criticos }}</div>
+        </a>
+        <div class="bucket">
+          <div class="t">Alumnos nuevos del mes</div>
+          <div class="v">{{ seguimiento.alumnos_nuevos_mes }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-cols">
+    <div class="cardx">
+      <h2 class="section-title">Presencias por día</h2>
+      <div class="chart-box">
+        {% set ns = namespace(max_count=0) %}
+        {% for row in presencias_por_dia %}
+          {% if row["count"] > ns.max_count %}
+            {% set ns.max_count = row["count"] %}
+          {% endif %}
+        {% endfor %}
+        <div class="bars">
+          {% for row in presencias_por_dia %}
+            {% if ns.max_count == 0 %}
+              {% set h = 6 %}
+            {% else %}
+              {% set h = ((row["count"] * 180) / ns.max_count) | round | int %}
+            {% endif %}
+            <div class="bar-wrap">
+              <div class="bar-value">{{ row["count"] }}</div>
+              <div class="bar" data-h="{{ h }}"></div>
+              <div class="bar-label">{{ row["day"] }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h2 class="section-title">Comparativo mensual</h2>
+      <div class="chart-box">
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Presencias</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in comparativo_mensual %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-cols">
+    <div class="cardx">
+      <h2 class="section-title">Presencias por servicio</h2>
+      <div class="chart-box">
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Servicio</th>
+              <th>Cantidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in servicios %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h2 class="section-title">Horarios más usados</h2>
+      <div class="chart-box">
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Presencias</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in horarios_top %}
+            <tr>
+              <td>{{ row.hour }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="2">No hay datos de horarios.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-cols">
+    <div class="cardx">
+      <h2 class="section-title">Profesores con más asistencias</h2>
+      <div class="chart-box">
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Profesor</th>
+              <th>Asistencias</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in profesores_top %}
+            <tr>
+              <td>{{ row.profesor.full_name or row.profesor.email }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="2">No hay datos de profesores.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h2 class="section-title">Alumnos nuevos del mes</h2>
+      <div class="list">
+        {% for a in alumnos_nuevos_mes[:10] %}
+          <div class="item">
+            <div class="name">{{ a.full_name or a.email }}</div>
+            <div class="meta">
+              {{ a.email }}
+              {% if a.created_at %}
+                · {{ a.created_at.strftime("%d/%m/%Y") }}
+              {% endif %}
+            </div>
+          </div>
+        {% else %}
+          <div class="item">
+            <div class="name">No hay alumnos nuevos este mes</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="two-cols">
+    <div class="cardx">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 class="section-title" style="margin:0">Alumnos con cuotas vencidas</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-outline-secondary" href="/admin/home/morosos/export">Exportar Excel</a>
+          <a class="btn btn-outline-secondary" href="/admin/home/morosos">Ver todos</a>
+        </div>
+      </div>
+
+      <div class="list" style="margin-top:14px">
+        {% for row in cuotas_vencidas[:12] %}
+          <div class="item">
+            <div class="name">{{ row.alumno.full_name or row.alumno.email }}</div>
+            <div class="meta">
+              {% if row.alumno.dni %}DNI {{ row.alumno.dni }} · {% endif %}
+              {{ row.alumno.email }}
+            </div>
+            <div class="pill">
+              {{ row.motivo }}{% if row.periodo and row.periodo != "-" %} · {{ row.periodo }}{% endif %}
+            </div>
+            <div class="actions-row">
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/followups/new?student_id={{ row.alumno.id }}&kind=MOROSIDAD">
+                Crear seguimiento
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <div class="item">
+            <div class="name">No hay alumnos con cuotas vencidas.</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="cardx">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 class="section-title" style="margin:0">Acceso rápido a inactivos</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-outline-secondary" href="/admin/home/inactivos/export">Exportar Excel</a>
+          <a class="btn btn-outline-secondary" href="/admin/home/inactivos?bucket=6+">Ver 6+ meses</a>
+        </div>
+      </div>
+
+      <div class="list" style="margin-top:14px">
+        {% for row in inactivos_bucket["6+"][:6] %}
+          <div class="item">
+            <div class="name">{{ row.full_name or row.email }}</div>
+            <div class="meta">
+              {% if row.dni %}DNI {{ row.dni }} · {% endif %}
+              {{ row.email }}
+            </div>
+            <div class="pill">Inactivo hace 6+ meses</div>
+            <div class="actions-row">
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/followups/new?student_id={{ row.id }}&kind=INACTIVIDAD">
+                Crear seguimiento
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+
+        {% for row in inactivos_bucket["nunca"][:4] %}
+          <div class="item">
+            <div class="name">{{ row.full_name or row.email }}</div>
+            <div class="meta">
+              {% if row.dni %}DNI {{ row.dni }} · {% endif %}
+              {{ row.email }}
+            </div>
+            <div class="pill">Nunca asistió</div>
+            <div class="actions-row">
+              <a class="btn btn-sm btn-outline-secondary" href="/admin/followups/new?student_id={{ row.id }}&kind=INACTIVIDAD">
+                Crear seguimiento
+              </a>
+            </div>
+          </div>
+        {% else %}
+          {% if (inactivos_bucket["6+"]|length == 0) and (inactivos_bucket["nunca"]|length == 0) %}
+          <div class="item">
+            <div class="name">No hay alumnos inactivos críticos.</div>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".bar[data-h]").forEach(function (el) {
+      const h = parseInt(el.getAttribute("data-h") || "6", 10);
+      el.style.height = `${Math.max(h, 6)}px`;
+    });
+  });
+</script>
+
+{% endblock %}

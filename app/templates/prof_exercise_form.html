@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .trz-wrap{max-width:900px;margin:0 auto;padding:18px;}
+  .trz-card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:16px;padding:16px}
+  .trz-title{margin:0 0 6px;font-size:22px;font-weight:800}
+  .trz-sub{margin:0 0 14px;opacity:.8}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width: 760px){.grid{grid-template-columns:1fr}}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:0 0 6px}
+  .inp, .txt{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.12);color:inherit}
+  .txt{min-height:110px;resize:vertical}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .btn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:inherit;text-decoration:none;cursor:pointer}
+  .btn:hover{background:rgba(255,255,255,.12)}
+  .err{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,0,0,.35);background:rgba(255,0,0,.10);margin-bottom:12px}
+</style>
+
+<div class="trz-wrap">
+  <div class="trz-card">
+    <h1 class="trz-title">Nuevo ejercicio</h1>
+    <p class="trz-sub">Completá los datos básicos. Después lo podés usar en rutinas.</p>
+
+    {% if error %}
+      <div class="err">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/profesor/exercises/new">
+      <div class="grid">
+        <div>
+          <div class="lbl">Nombre</div>
+          <input class="inp" name="name" required placeholder="Ej: Press banca" />
+        </div>
+        <div>
+          <div class="lbl">Grupo muscular</div>
+          <input class="inp" name="muscle_group" placeholder="Ej: Pecho" />
+        </div>
+        <div>
+          <div class="lbl">Equipo</div>
+          <input class="inp" name="equipment" placeholder="Ej: Barra / Mancuernas / Máquina" />
+        </div>
+        <div>
+          <div class="lbl">Descripción</div>
+          <input class="inp" name="description" placeholder="Ej: Técnica / tips / ejecución" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn" type="submit">💾 Guardar</button>
+        <a class="btn" href="/profesor/exercises">↩️ Volver</a>
+        <a class="btn" href="/profesor/routines">📋 Ir a rutinas</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

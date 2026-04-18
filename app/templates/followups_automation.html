@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1450px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Automatizaciones</h1>
+      <div class="sub">Reglas automáticas para seguimiento comercial.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <form method="post" action="/admin/followups/automation/run" style="display:inline">
+        <button class="btn btn-primary" type="submit">Ejecutar reglas ahora</button>
+      </form>
+      <a class="btn btn-outline-secondary" href="/admin/followups/dashboard">Dashboard</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Seguimientos</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="cardx">
+      <h3 style="margin-top:0">Reglas activas</h3>
+      <div class="list">
+        <div class="item">
+          <strong>Sin respuesta en 3 días</strong>
+          <div class="meta">Si el seguimiento está en CONTACTADO y no respondió en 3 días, se genera recordatorio automático y se actualiza el próximo contacto.</div>
+        </div>
+        <div class="item">
+          <strong>Respuesta positiva</strong>
+          <div class="meta">Si la respuesta se detecta como positiva, el seguimiento pasa a REACTIVADO, prioridad ALTA y se desactiva automatización.</div>
+        </div>
+        <div class="item">
+          <strong>Respuesta negativa</strong>
+          <div class="meta">Si la respuesta se detecta como negativa, el seguimiento pasa a DESCARTADO y se desactiva automatización.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h3 style="margin-top:0">Candidatos a recordatorio</h3>
+      <div class="list">
+        {% for row in candidates_no_response %}
+        <div class="item">
+          <div><strong>{{ row.student.full_name if row.student else "-" }}</strong></div>
+          <div class="meta">{{ row.title or "-" }}</div>
+          <div class="meta">Contactado: {{ row.contacted_at.strftime("%d/%m/%Y %H:%M") if row.contacted_at else "-" }}</div>
+          <div class="meta">Próximo contacto: {{ row.next_contact_date.strftime("%d/%m/%Y") if row.next_contact_date else "-" }}</div>
+        </div>
+        {% else %}
+        <div class="item">No hay seguimientos pendientes de recordatorio automático.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

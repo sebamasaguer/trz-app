@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1240px;margin:0 auto;padding:18px;}
+  .card2{
+    border:1px solid rgba(255,255,255,.08);
+    background:#1f242b;
+    border-radius:18px;
+    padding:18px
+  }
+  .ttl{font-size:30px;font-weight:900;margin:0 0 4px}
+  .muted{opacity:.78}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .btnx{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+    background:#ca5aa6;color:#fff;text-decoration:none;font-weight:800;
+  }
+  .btnx.alt{background:transparent}
+  .table-wrap{overflow:auto;border-radius:16px}
+  table{width:100%;border-collapse:collapse;min-width:1080px}
+  th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+  th{text-align:left;font-size:13px;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+  .tag{
+    display:inline-block;padding:6px 10px;border-radius:999px;
+    font-size:12px;font-weight:800
+  }
+  .tag.ok{background:#1f7a52;color:#fff}
+  .tag.wait{background:#a66d00;color:#fff}
+  .tag.bad{background:#9e334b;color:#fff}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .mini{
+    padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
+    background:transparent;color:#fff;font-weight:700;cursor:pointer
+  }
+  .summary{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;
+  }
+  @media (max-width: 760px){
+    .summary{grid-template-columns:1fr}
+  }
+  .box{
+    border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:#1f242b
+  }
+  .subnote{font-size:12px;opacity:.75;margin-top:4px}
+</style>
+
+<div class="wrap">
+  <div class="top" style="margin-bottom:14px">
+    <div>
+      <h1 class="ttl">Historial de pagos</h1>
+      <div class="muted">
+        {{ student.full_name or (student.first_name ~ ' ' ~ student.last_name) }}
+        · {{ student.email }}
+        {% if student.dni %} · DNI {{ student.dni }}{% endif %}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btnx" href="/admin/alumnos/{{ student.id }}/payments/new">＋ Registrar pago</a>
+      <a class="btnx alt" href="/admin/users">← Volver</a>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="box">
+      <div class="muted" style="font-size:13px">Total acreditado</div>
+      <div style="font-size:28px;font-weight:900">${{ '%.2f'|format(total_acreditado or 0) }}</div>
+      <div class="subnote">Suma de ingresos acreditados del alumno.</div>
+    </div>
+    <div class="box">
+      <div class="muted" style="font-size:13px">Alumno</div>
+      <div style="font-size:20px;font-weight:800">
+        {{ student.full_name or (student.first_name ~ ' ' ~ student.last_name) }}
+      </div>
+      <div class="subnote">{{ student.email }}</div>
+    </div>
+  </div>
+
+  <div class="card2">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Concepto</th>
+            <th>Período</th>
+            <th>Importe</th>
+            <th>Método</th>
+            <th>Estado</th>
+            <th>Membresía</th>
+            <th>Comprobante</th>
+            <th>Cargado por</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>
+              {% if r.paid_at %}
+                {{ r.paid_at.strftime("%d/%m/%Y %H:%M") }}
+              {% elif r.movement_date %}
+                {{ r.movement_date.strftime("%d/%m/%Y %H:%M") }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              <div>{{ r.concept }}</div>
+              {% if r.receipt_note %}
+                <div class="subnote">{{ r.receipt_note }}</div>
+              {% endif %}
+            </td>
+            <td>{{ r.period_yyyymm or "-" }}</td>
+            <td>${{ '%.2f'|format(r.amount or 0) }}</td>
+            <td>{{ r.payment_method.value if r.payment_method else "-" }}</td>
+            <td>
+              {% if r.status.value == "ACREDITADO" %}
+                <span class="tag ok">ACREDITADO</span>
+              {% elif r.status.value == "PENDIENTE" %}
+                <span class="tag wait">PENDIENTE</span>
+              {% else %}
+                <span class="tag bad">ANULADO</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if r.membership_assignment and r.membership_assignment.membership %}
+                {{ r.membership_assignment.membership.name }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if r.receipt_image_path %}
+                <a href="{{ r.receipt_image_path }}" target="_blank">Ver comprobante</a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if r.created_by %}
+                {{ r.created_by.full_name or r.created_by.email }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              <div class="actions">
+                {% if r.status.value == "PENDIENTE" %}
+                  <form method="post" action="/admin/payments/{{ r.id }}/confirm">
+                    <button class="mini" type="submit">Acreditar</button>
+                  </form>
+                {% endif %}
+
+                {% if r.status.value != "ANULADO" %}
+                  <form method="post" action="/admin/payments/{{ r.id }}/cancel">
+                    <button class="mini" type="submit">Anular</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="10" style="text-align:center;opacity:.72;padding:20px">
+              No hay pagos cargados para este alumno.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

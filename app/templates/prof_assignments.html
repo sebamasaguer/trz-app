@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid" style="max-width:1100px">
+  <div class="d-flex align-items-end justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+      <h3 class="mb-1">Asignar rutinas</h3>
+      <div class="text-muted">Elegí un alumno y una de tus rutinas. Se reemplaza la activa anterior.</div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-primary" href="/profesor/routines">Rutinas</a>
+      <a class="btn btn-outline-primary" href="/profesor/exercises">Ejercicios</a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="post" action="/profesor/assignments" class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label">Alumno</label>
+          <select class="form-select" name="student_id" required>
+            <option value="">Seleccionar...</option>
+            {% for s in students %}
+              <option value="{{ s.id }}">{{ s.last_name }} {{ s.first_name }}{% if s.dni %} (DNI {{ s.dni }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label">Rutina</label>
+          <select class="form-select" name="routine_id" required>
+            <option value="">Seleccionar...</option>
+            {% for r in routines %}
+              <option value="{{ r.id }}">{{ r.title }} ({{ r.routine_type.value }})</option>
+            {% endfor %}
+          </select>
+          {% if routines|length == 0 %}
+            <div class="text-muted mt-2">No tenés rutinas creadas todavía.</div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Inicio</label>
+          <input type="date" class="form-control" name="start_date" />
+        </div>
+
+        <div class="col-12">
+          <button class="btn btn-primary" type="submit">Asignar rutina</button>
+          <span class="text-muted ms-2">Si el alumno ya tenía una activa, se reemplaza.</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-3">Asignaciones activas</h5>
+
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Rutina</th>
+              <th>Tipo</th>
+              <th>Inicio</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in active_assignments %}
+              <tr>
+                <td>{{ a.student.last_name }} {{ a.student.first_name }}</td>
+                <td>{{ a.routine.title }}</td>
+                <td>{{ a.routine.routine_type.value }}</td>
+                <td>{{ a.start_date or "-" }}</td>
+                <td class="d-flex gap-2 flex-wrap">
+                  <a class="btn btn-outline-secondary btn-sm"
+                     href="/profesor/assignments/history/{{ a.student_id }}">
+                    Historial
+                  </a>
+
+                  <form method="post"
+                        action="/profesor/assignments/{{ a.student_id }}/deactivate"
+                        onsubmit="return confirm('¿Quitar la rutina activa de este alumno?');"
+                        style="display:inline">
+                    <button class="btn btn-danger btn-sm" type="submit">Quitar asignación</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-muted">No hay asignaciones activas todavía.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-muted mt-2" style="font-size:13px">
+        Nota: el historial muestra solo rutinas creadas por vos (no las de otros profesores).
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

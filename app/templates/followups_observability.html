@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1500px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  @media (max-width:1200px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:700px){.grid{grid-template-columns:1fr}}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .kpi-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.72;margin-bottom:8px}
+  .kpi-value{font-size:28px;font-weight:900}
+  .kpi-sub{margin-top:8px;font-size:13px;opacity:.72}
+  .section-title{font-size:22px;font-weight:900;margin:0 0 14px}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+  .two-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:1000px){.two-cols{grid-template-columns:1fr}}
+  .tag{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}
+  .ok{background:rgba(46,204,113,.22)}
+  .warn{background:rgba(241,196,15,.22)}
+  .err{background:rgba(231,76,60,.22)}
+  .neu{background:rgba(127,140,141,.22)}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Observabilidad de followups</h1>
+      <div class="sub">Métricas operativas, pendientes atascados y actividad reciente.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/followups/dashboard">Dashboard</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups/automation">Automatizaciones</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Seguimientos</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="cardx">
+      <div class="kpi-title">Pendientes totales</div>
+      <div class="kpi-value">{{ summary.pending_total }}</div>
+      <div class="kpi-sub">Intentos con delivery_status=PENDING</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-title">Enviados totales</div>
+      <div class="kpi-value">{{ summary.sent_total }}</div>
+      <div class="kpi-sub">Intentos marcados como SENT</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-title">Errores totales</div>
+      <div class="kpi-value">{{ summary.error_total }}</div>
+      <div class="kpi-sub">Intentos fallidos</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-title">En curso</div>
+      <div class="kpi-value">{{ summary.outbound_in_progress }}</div>
+      <div class="kpi-sub">Followups con outbound_in_progress activo</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-title">Pendientes 24h</div>
+      <div class="kpi-value">{{ summary.pending_24h }}</div>
+      <div class="kpi-sub">Intentos pendientes en últimas 24h</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-title">Enviados 24h</div>
+      <div class="kpi-value">{{ summary.sent_24h }}</div>
+      <div class="kpi-sub">
+        WhatsApp: {{ summary.whatsapp_sent_24h }} · Email: {{ summary.email_sent_24h }}
+      </div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-title">Errores 24h</div>
+      <div class="kpi-value">{{ summary.error_24h }}</div>
+      <div class="kpi-sub">Fallos de entrega recientes</div>
+    </div>
+
+    <div class="cardx">
+      <div class="kpi-title">Webhooks 24h</div>
+      <div class="kpi-value">{{ summary.webhook_processed_24h }}</div>
+      <div class="kpi-sub">
+        Reglas evaluadas: {{ summary.rule_evaluated_24h }} · Errores regla: {{ summary.rule_error_24h }}
+      </div>
+    </div>
+  </div>
+
+  <div class="two-cols">
+    <div class="cardx">
+      <h2 class="section-title">Pendientes atascados</h2>
+      <div class="list">
+        {% for action in pending_old %}
+          {% set row = action.followup %}
+          {% set student = row.student if row and row.student else None %}
+          <div class="item">
+            <div>
+              <strong>{{ student.full_name if student else "-" }}</strong>
+              <span class="tag warn">PENDING</span>
+            </div>
+            <div class="meta">
+              Followup #{{ row.id if row else "-" }} · Ref: {{ action.external_ref or "-" }}
+            </div>
+            <div class="meta">
+              Canal: {{ action.channel.value if action.channel else "-" }} · {{ action.created_at.strftime("%d/%m/%Y %H:%M") if action.created_at else "-" }}
+            </div>
+            <div class="meta">{{ action.summary or "-" }}</div>
+          </div>
+        {% else %}
+          <div class="item">No hay pendientes atascados mayores a 10 minutos.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h2 class="section-title">Actividad reciente</h2>
+      <div class="list">
+        {% for action in recent_actions %}
+          {% set row = action.followup %}
+          {% set student = row.student if row and row.student else None %}
+          <div class="item">
+            <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+              <div>
+                <strong>{{ student.full_name if student else "-" }}</strong>
+              </div>
+              <div>
+                {% if action.delivery_status == "ERROR" or action.delivery_status == "FAILED" %}
+                  <span class="tag err">{{ action.delivery_status or "ERROR" }}</span>
+                {% elif action.delivery_status == "PENDING" %}
+                  <span class="tag warn">PENDING</span>
+                {% elif action.delivery_status in ["SENT","DELIVERED","READ","REPLIED"] %}
+                  <span class="tag ok">{{ action.delivery_status }}</span>
+                {% else %}
+                  <span class="tag neu">{{ action.delivery_status or "N/A" }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="meta">
+              {{ action.created_at.strftime("%d/%m/%Y %H:%M") if action.created_at else "-" }}
+              · {{ action.action_type.value if action.action_type else "-" }}
+              {% if action.channel %} · {{ action.channel.value }}{% endif %}
+            </div>
+            <div class="meta">{{ action.summary or "-" }}</div>
+            {% if action.external_ref %}
+            <div class="meta">Ref: {{ action.external_ref }}</div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="item">No hay actividad reciente.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

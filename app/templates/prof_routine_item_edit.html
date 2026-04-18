@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:900px;margin:0 auto;padding:18px;}
+  .card2{border:1px solid rgba(0,0,0,.06);background:#fff;border-radius:16px;padding:16px}
+  .ttl{font-size:22px;font-weight:900;margin:0}
+  .muted{opacity:.75}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width: 760px){.grid{grid-template-columns:1fr}}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin:0 0 6px}
+  .inp,.sel{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.12);background:#f6f6f7}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .btnx{padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.14);background:#fff;cursor:pointer;text-decoration:none;color:inherit}
+  .btnx.primary{background:#111;color:#fff;border-color:#111}
+</style>
+
+<div class="wrap">
+  <div class="card2">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start">
+      <div>
+        <h1 class="ttl">Editar ejercicio de la rutina</h1>
+        <div class="muted">Rutina: <b>{{ routine.title }}</b> ({{ routine.routine_type.value }})</div>
+      </div>
+      <a class="btnx" href="/profesor/routines/{{ routine.id }}">↩️ Volver</a>
+    </div>
+
+    <form method="post" action="/profesor/routines/{{ routine.id }}/items/{{ item.id }}/edit" style="margin-top:14px">
+      <div style="margin-bottom:12px">
+        <div class="lbl">Ejercicio</div>
+        <select class="sel" name="exercise_id" required>
+          {% for e in exercises %}
+            <option value="{{ e.id }}" {% if e.id == item.exercise_id %}selected{% endif %}>{{ e.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if routine.routine_type.value == "SEMANAS" %}
+        <div class="grid" style="margin-bottom:12px">
+          <div>
+            <div class="lbl">Semana (ej: Semana 1)</div>
+            <input class="inp" name="day_label" value="{{ item.day_label }}" placeholder="Semana 1" />
+          </div>
+          <div>
+            <div class="lbl">Día</div>
+            <select class="sel" name="weekday" required>
+              <option value="">Seleccionar...</option>
+              {% for d in days %}
+                <option value="{{ d }}" {% if d == item.weekday %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      {% else %}
+        <div style="margin-bottom:12px">
+          <div class="lbl">Día</div>
+          <select class="sel" name="weekday" required>
+            <option value="">Seleccionar...</option>
+            {% for d in days %}
+              <option value="{{ d }}" {% if d == item.weekday %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+
+      <div class="grid" style="margin-bottom:12px">
+        <div>
+          <div class="lbl">Series</div>
+          <input class="inp" type="number" name="sets" value="{{ item.sets }}" min="0" />
+        </div>
+        <div>
+          <div class="lbl">Reps</div>
+          <input class="inp" name="reps" value="{{ item.reps }}" placeholder="8-10" />
+        </div>
+      </div>
+
+      <div class="grid" style="margin-bottom:12px">
+        <div style="margin-bottom:12px">
+          <div class="lbl">Descanso (seg)</div>
+          <input class="inp" type="number" name="rest_seconds" value="{{ item.rest_seconds }}" min="0" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div class="lbl">Notas</div>
+        <input class="inp" name="notes" value="{{ item.notes }}" placeholder="Técnica, tempo, RPE..." />
+      </div>
+
+      <div class="row">
+        <button class="btnx primary" type="submit">💾 Guardar cambios</button>
+        <a class="btnx" href="/profesor/routines/{{ routine.id }}">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

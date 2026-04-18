@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-3" style="max-width: 900px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{% if item %}Editar membresía{% else %}Nueva membresía{% endif %}</h3>
+    <a class="btn btn-outline-secondary" href="/admin/memberships">Volver</a>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{% if item %}/admin/memberships/{{ item.id }}/edit{% else %}/admin/memberships/new{% endif %}">
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-2">
+          <label class="form-label">Nombre</label>
+          <input class="form-control" name="name" value="{{ item.name if item else '' }}" required>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" name="kind" required>
+            {% for k in kinds %}
+              <option value="{{ k }}" {% if item and item.kind.value==k %}selected{% endif %}>{{ k }}</option>
+            {% endfor %}
+          </select>
+          <div class="text-muted small mt-1">
+            FUNCIONAL/MUSCULACION: clases o libre. COMBINACION: F+M. CLASE_SUELTA: precio único.
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label">Funcional: clases</label>
+            <input class="form-control" type="number" name="funcional_classes" min="0"
+                   value="{{ item.funcional_classes if item and item.funcional_classes else 0 }}">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" name="funcional_unlimited"
+                     {% if item and item.funcional_unlimited %}checked{% endif %}>
+              <label class="form-check-label">Funcional libre</label>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Musculación: clases</label>
+            <input class="form-control" type="number" name="musculacion_classes" min="0"
+                   value="{{ item.musculacion_classes if item and item.musculacion_classes else 0 }}">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" name="musculacion_unlimited"
+                     {% if item and item.musculacion_unlimited %}checked{% endif %}>
+              <label class="form-check-label">Musculación libre</label>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        {% set pm = pmap if pmap is defined else {} %}
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label">Precio LISTA</label>
+            <input class="form-control" name="price_lista" placeholder="Ej: 70000"
+                   value="{{ pm.get('LISTA','') }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Precio EFECTIVO</label>
+            <input class="form-control" name="price_efectivo" placeholder="Ej: 60000"
+                   value="{{ pm.get('EFECTIVO','') }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Precio TRANSFERENCIA</label>
+            <input class="form-control" name="price_transferencia" placeholder="Ej: 65000"
+                   value="{{ pm.get('TRANSFERENCIA','') }}">
+          </div>
+        </div>
+
+        {% if item %}
+          <hr>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="is_active" {% if item.is_active %}checked{% endif %}>
+            <label class="form-check-label">Membresía activa</label>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-secondary" href="/admin/memberships">Cancelar</a>
+        <button class="btn btn-primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

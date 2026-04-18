@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1380px;margin:0 auto;padding:18px}
+  .hero{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:14px;flex-wrap:wrap;margin-bottom:16px
+  }
+  .hero h1{font-size:34px;font-weight:900;margin:0}
+  .hero .sub{opacity:.72;margin-top:6px}
+
+  .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+  .alerts{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+  .alertx{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.05);
+    border-radius:14px;
+    padding:12px 14px;
+    font-weight:700;
+  }
+
+  .grid-kpis{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px;
+    margin-bottom:16px;
+  }
+  @media (max-width: 1000px){
+    .grid-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width: 640px){
+    .grid-kpis{grid-template-columns:1fr}
+  }
+
+  .cardx{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    border-radius:18px;
+    padding:16px;
+  }
+
+  .kpi .lbl{
+    font-size:.78rem;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    opacity:.72;
+    margin-bottom:6px;
+    font-weight:800;
+  }
+  .kpi .val{
+    font-size:1.45rem;
+    font-weight:900;
+    line-height:1.1;
+  }
+
+  .session-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:16px;
+  }
+  @media (max-width: 1100px){
+    .session-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width: 640px){
+    .session-grid{grid-template-columns:1fr}
+  }
+
+  .mini{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    border-radius:16px;
+    padding:12px 14px;
+  }
+  .mini .lbl{
+    font-size:.78rem;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    opacity:.72;
+    margin-bottom:4px;
+    font-weight:800;
+  }
+  .mini .val{
+    font-weight:900;
+    word-break:break-word;
+  }
+
+  .filters{
+    display:grid;
+    grid-template-columns:1.5fr 1fr 1fr 1fr auto;
+    gap:12px;
+    margin-bottom:16px;
+    align-items:end;
+  }
+  @media (max-width: 1100px){
+    .filters{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width: 680px){
+    .filters{grid-template-columns:1fr}
+  }
+
+  .fg label{
+    display:block;
+    font-size:.84rem;
+    font-weight:800;
+    margin-bottom:6px;
+    opacity:.9;
+  }
+  .fg input,.fg select{
+    width:100%;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.05);
+    color:inherit;
+    padding:10px 12px;
+    outline:none;
+  }
+
+  .summary-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+    opacity:.86;
+    font-size:.95rem;
+  }
+
+  .table-wrap{overflow:auto}
+  table{width:100%;border-collapse:collapse;min-width:1100px}
+  th,td{
+    padding:12px 10px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    text-align:left;
+    vertical-align:top;
+  }
+  th{
+    font-size:.84rem;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    opacity:.78;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    font-size:12px;
+    font-weight:900;
+    line-height:1;
+    white-space:nowrap;
+  }
+  .badge-ok{background:rgba(25,135,84,.16)}
+  .badge-warn{background:rgba(255,193,7,.18)}
+  .badge-danger{background:rgba(220,53,69,.18)}
+  .badge-soft{background:rgba(255,255,255,.06)}
+
+  .muted{opacity:.72;font-size:.92rem}
+  .empty{
+    text-align:center;
+    opacity:.72;
+    padding:28px 12px !important;
+  }
+
+  .pager{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:16px;
+  }
+  .pager-links{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .pager a,
+  .pager span.page-current{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:38px;
+    height:38px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.05);
+    color:inherit;
+    text-decoration:none;
+    font-weight:800;
+  }
+  .pager span.page-current{
+    background:rgba(255,255,255,.12);
+  }
+
+  .sessions-box{margin-top:16px}
+  .session-list{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  @media (max-width: 900px){
+    .session-list{grid-template-columns:1fr}
+  }
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Caja</h1>
+      <div class="sub">Gestión operativa de caja, movimientos y cierres</div>
+    </div>
+
+    <div class="top-actions">
+      <a class="btn btn-primary" href="/admin/caja/open">Abrir caja</a>
+      <a class="btn btn-outline-secondary" href="/admin/caja/expense/new">Registrar egreso</a>
+      <a class="btn btn-outline-secondary" href="/admin/caja/close">Cerrar caja</a>
+      <a class="btn btn-outline-secondary" href="/admin/caja/report">Reporte</a>
+    </div>
+  </div>
+
+  <div class="alerts">
+    {% if ok %}
+      <div class="alertx">{{ ok.replace('+', ' ') }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alertx">{{ error.replace('+', ' ') }}</div>
+    {% endif %}
+  </div>
+
+  <div class="grid-kpis">
+    <div class="cardx kpi">
+      <div class="lbl">Ingresos acreditados</div>
+      <div class="val">{{ "%.2f"|format(accredited_total or 0) }}</div>
+    </div>
+    <div class="cardx kpi">
+      <div class="lbl">Ingresos pendientes</div>
+      <div class="val">{{ "%.2f"|format(pending_total or 0) }}</div>
+    </div>
+    <div class="cardx kpi">
+      <div class="lbl">Egresos acreditados</div>
+      <div class="val">{{ "%.2f"|format(expense_total or 0) }}</div>
+    </div>
+    <div class="cardx kpi">
+      <div class="lbl">Caja abierta</div>
+      <div class="val">{{ "Sí" if open_session else "No" }}</div>
+    </div>
+  </div>
+
+  {% if open_session %}
+    <div class="cardx" style="margin-bottom:16px;">
+      <div style="font-size:1rem;font-weight:900;margin-bottom:12px;">Caja abierta actual</div>
+      <div class="session-grid">
+        <div class="mini">
+          <div class="lbl">Sesión</div>
+          <div class="val">#{{ open_session.id }}</div>
+        </div>
+        <div class="mini">
+          <div class="lbl">Abierta por</div>
+          <div class="val">
+            {{ open_session.opened_by.full_name if open_session.opened_by else (open_session.opened_by_user_id or '-') }}
+          </div>
+        </div>
+        <div class="mini">
+          <div class="lbl">Apertura</div>
+          <div class="val">
+            {{ open_session.opened_at.strftime("%d/%m/%Y %H:%M") if open_session.opened_at else "-" }}
+          </div>
+        </div>
+        <div class="mini">
+          <div class="lbl">Monto apertura</div>
+          <div class="val">{{ "%.2f"|format(open_session.opening_amount or 0) }}</div>
+        </div>
+        <div class="mini">
+          <div class="lbl">Cierre esperado</div>
+          <div class="val">{{ "%.2f"|format(open_session.expected_closing_amount or 0) }}</div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="cardx">
+    <form method="get" action="/admin/caja">
+      <div class="filters">
+        <div class="fg">
+          <label for="q">Buscar</label>
+          <input
+            id="q"
+            type="text"
+            name="q"
+            value="{{ q or '' }}"
+            placeholder="Concepto, alumno, email, DNI..."
+          >
+        </div>
+
+        <div class="fg">
+          <label for="month">Mes</label>
+          <input id="month" type="month" name="month" value="{{ month or '' }}">
+        </div>
+
+        <div class="fg">
+          <label for="status">Estado</label>
+          <select id="status" name="status">
+            <option value="">Todos</option>
+            {% for st in movement_statuses %}
+              <option value="{{ st.value }}" {% if status == st.value %}selected{% endif %}>{{ st.value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg">
+          <label for="payment_method">Medio de pago</label>
+          <select id="payment_method" name="payment_method">
+            <option value="">Todos</option>
+            {% for pm in payment_methods %}
+              <option value="{{ pm.value }}" {% if payment_method == pm.value %}selected{% endif %}>{{ pm.value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+          <a href="/admin/caja" class="btn btn-outline-secondary">Limpiar</a>
+        </div>
+      </div>
+    </form>
+
+    <div class="summary-bar">
+      <div>
+        Página <strong>{{ page }}</strong> de <strong>{{ total_pages }}</strong>
+      </div>
+      <div>
+        Total de movimientos: <strong>{{ total }}</strong>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Concepto</th>
+            <th>Categoría</th>
+            <th>Monto</th>
+            <th>Estado</th>
+            <th>Pago</th>
+            <th>Alumno</th>
+            <th>Usuario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in movements %}
+          <tr>
+            <td>{{ m.movement_date.strftime("%d/%m/%Y %H:%M") if m.movement_date else "-" }}</td>
+            <td>
+              {% if m.entry_type.value == 'INGRESO' %}
+                <span class="badge badge-ok">{{ m.entry_type.value }}</span>
+              {% else %}
+                <span class="badge badge-danger">{{ m.entry_type.value }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <div>{{ m.concept or "-" }}</div>
+              {% if m.notes %}
+                <div class="muted">{{ m.notes }}</div>
+              {% endif %}
+            </td>
+            <td>{{ m.category or "-" }}</td>
+            <td>{{ "%.2f"|format(m.amount or 0) }}</td>
+            <td>
+              {% if m.status.value == 'ACREDITADO' %}
+                <span class="badge badge-ok">{{ m.status.value }}</span>
+              {% elif m.status.value == 'PENDIENTE' %}
+                <span class="badge badge-warn">{{ m.status.value }}</span>
+              {% else %}
+                <span class="badge badge-soft">{{ m.status.value }}</span>
+              {% endif %}
+            </td>
+            <td>{{ m.payment_method.value if m.payment_method else "-" }}</td>
+            <td>
+              {% if m.student %}
+                {{ m.student.full_name or m.student.email or m.student_id }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if m.created_by %}
+                {{ m.created_by.full_name or m.created_by.email or m.created_by_id }}
+              {% else %}
+                {{ m.created_by_id or "-" }}
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" class="empty">No hay movimientos para los filtros actuales.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% set base_qs = 'page_size=' ~ page_size ~ '&q=' ~ (q or '') ~ '&month=' ~ (month or '') ~ '&status=' ~ (status or '') ~ '&payment_method=' ~ (payment_method or '') %}
+
+    <div class="pager">
+      <div class="muted">
+        Mostrando {{ movements|length }} registro(s) en esta página
+      </div>
+
+      <div class="pager-links">
+        {% if has_prev %}
+          <a href="/admin/caja?page=1&{{ base_qs }}">«</a>
+          <a href="/admin/caja?page={{ prev_page }}&{{ base_qs }}">‹</a>
+        {% endif %}
+
+        <span class="page-current">{{ page }}</span>
+
+        {% if has_next %}
+          <a href="/admin/caja?page={{ next_page }}&{{ base_qs }}">›</a>
+          <a href="/admin/caja?page={{ total_pages }}&{{ base_qs }}">»</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="cardx sessions-box">
+    <div style="font-size:1rem;font-weight:900;margin-bottom:12px;">Últimas sesiones de caja</div>
+
+    <div class="session-list">
+      {% for s in sessions %}
+        <div class="mini">
+          <div class="lbl">Sesión #{{ s.id }}</div>
+          <div class="val" style="margin-bottom:6px;">
+            {{ s.status.value }}
+          </div>
+          <div class="muted">
+            Apertura:
+            {{ s.opened_at.strftime("%d/%m/%Y %H:%M") if s.opened_at else "-" }}
+          </div>
+          <div class="muted">
+            Abierta por:
+            {{ s.opened_by.full_name if s.opened_by else (s.opened_by_user_id or '-') }}
+          </div>
+          <div class="muted">
+            Cierre:
+            {{ s.closed_at.strftime("%d/%m/%Y %H:%M") if s.closed_at else "-" }}
+          </div>
+          <div class="muted">
+            Cerrada por:
+            {{ s.closed_by.full_name if s.closed_by else (s.closed_by_user_id or '-') }}
+          </div>
+        </div>
+      {% else %}
+        <div class="muted">No hay sesiones registradas todavía.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

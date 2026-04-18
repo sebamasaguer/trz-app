@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1400px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .table-wrap{overflow:auto;border-radius:16px}
+  table{width:100%;border-collapse:collapse;min-width:1100px}
+  th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+  th{text-align:left;font-size:13px;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Alumnos con cuotas vencidas</h1>
+      <div class="sub">Período actual: {{ period }}</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/home/morosos/export">Exportar Excel</a>
+      <a class="btn btn-outline-secondary" href="/admin/home">Volver</a>
+    </div>
+  </div>
+
+  <div class="cardx">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Alumno</th>
+            <th>Email</th>
+            <th>DNI</th>
+            <th>Membresía</th>
+            <th>Período</th>
+            <th>Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.alumno.full_name or row.alumno.email }}</td>
+            <td>{{ row.alumno.email }}</td>
+            <td>{{ row.alumno.dni or "-" }}</td>
+            <td>{{ row.membership_name }}</td>
+            <td>{{ row.periodo }}</td>
+            <td>{{ row.motivo }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align:center;opacity:.72;padding:20px">No hay alumnos morosos.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

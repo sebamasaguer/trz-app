@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .page-wrap{max-width:1400px;margin:0 auto;padding:18px}
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,1.7fr) 380px;
+    gap:18px;
+    align-items:start;
+  }
+  @media (max-width: 1180px){
+    .layout{grid-template-columns:1fr}
+  }
+
+  .panel{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    border-radius:20px;
+    overflow:hidden;
+  }
+
+  .hero{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .hero h1{
+    margin:0;
+    font-size:34px;
+    font-weight:900;
+    line-height:1.05;
+  }
+  .hero-sub{opacity:.72;margin-top:6px}
+
+  .badges{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 11px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    font-size:12px;
+    font-weight:900;
+    line-height:1;
+    white-space:nowrap;
+  }
+  .badge-warn{background:rgba(255,193,7,.18)}
+  .badge-danger{background:rgba(220,53,69,.18)}
+  .badge-info{background:rgba(13,110,253,.16)}
+  .badge-muted{background:rgba(255,255,255,.06)}
+  .badge-success{background:rgba(25,135,84,.16)}
+
+  .alerts{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .alertx{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.05);
+    border-radius:14px;
+    padding:12px 14px;
+    font-weight:700;
+  }
+
+  .main-top{
+    padding:18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+
+  .contact-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    margin-top:16px;
+  }
+  @media (max-width: 1100px){
+    .contact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width: 640px){
+    .contact-grid{grid-template-columns:1fr}
+  }
+
+  .mini{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    border-radius:16px;
+    padding:12px 14px;
+  }
+  .mini .lbl{
+    font-size:.78rem;
+    opacity:.72;
+    margin-bottom:4px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    font-weight:800;
+  }
+  .mini .val{
+    font-weight:900;
+    word-break:break-word;
+  }
+
+  .chat-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    padding:14px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .chat-title{
+    font-size:1rem;
+    font-weight:900;
+    margin:0;
+  }
+  .chat-tools{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .chat-wrap{
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    max-height:70vh;
+    overflow:auto;
+    scroll-behavior:smooth;
+  }
+
+  .msg{
+    max-width:78%;
+    border-radius:18px;
+    padding:12px 14px;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    box-shadow:0 6px 18px rgba(0,0,0,.08);
+  }
+  .msg.user{align-self:flex-start}
+  .msg.bot{align-self:flex-end;background:rgba(13,110,253,.10)}
+  .msg.human{align-self:flex-end;background:rgba(25,135,84,.10)}
+  .msg.system{align-self:center;background:rgba(255,193,7,.10);max-width:86%}
+
+  .msg-head{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:center;
+    margin-bottom:6px;
+    font-size:.8rem;
+    opacity:.8;
+    font-weight:800;
+  }
+  .msg-head-left{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .msg-text{
+    white-space:pre-wrap;
+    word-break:break-word;
+    line-height:1.45;
+  }
+  .msg-meta{
+    margin-top:8px;
+    font-size:.78rem;
+    opacity:.68;
+  }
+
+  .side{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .side-section{
+    padding:16px;
+  }
+  .side-title{
+    font-size:1rem;
+    font-weight:900;
+    margin:0 0 12px;
+  }
+
+  .quick-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .stack{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .form-grid{
+    display:grid;
+    gap:10px;
+  }
+  .form-grid label{
+    font-size:.84rem;
+    font-weight:800;
+    margin-bottom:4px;
+    display:block;
+  }
+  .form-grid input,
+  .form-grid textarea,
+  .form-grid select{
+    width:100%;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.05);
+    color:inherit;
+    padding:10px 12px;
+    outline:none;
+  }
+  .form-grid textarea{min-height:100px;resize:vertical}
+
+  .row-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .summary-box{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    border-radius:16px;
+    padding:12px 14px;
+  }
+  .summary-box + .summary-box{margin-top:10px}
+
+  .summary-k{
+    font-size:.78rem;
+    opacity:.7;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    font-weight:800;
+    margin-bottom:4px;
+  }
+  .summary-v{
+    font-weight:800;
+    word-break:break-word;
+  }
+
+  .muted{opacity:.72}
+</style>
+
+<div class="page-wrap">
+  <div class="hero">
+    <div>
+      <h1>Conversación #{{ row.id }}</h1>
+      <div class="hero-sub">
+        Detalle operativo de conversación y seguimiento comercial
+      </div>
+    </div>
+
+    <div class="badges">
+      <span class="badge badge-info">{{ row.conversation_type.value }}</span>
+      <span class="badge {% if row.status.value == 'DERIVADA_A_HUMANO' %}badge-danger{% else %}badge-muted{% endif %}">
+        {{ row.status.value }}
+      </span>
+      {% if row.assistant_paused %}
+        <span class="badge badge-warn">PAUSADO</span>
+      {% endif %}
+      {% if row.lead_temperature %}
+        <span class="badge badge-muted">{{ row.lead_temperature|upper }}</span>
+      {% endif %}
+      {% if row.commercial_stage %}
+        <span class="badge badge-muted">{{ row.commercial_stage.value }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="alerts">
+    {% if sent %}
+      <div class="alertx">Mensaje enviado correctamente.</div>
+    {% endif %}
+    {% if paused %}
+      <div class="alertx">La conversación quedó pausada para el asistente.</div>
+    {% endif %}
+    {% if resumed %}
+      <div class="alertx">La conversación volvió a modo automático.</div>
+    {% endif %}
+    {% if reactivated %}
+      <div class="alertx">La conversación fue marcada como reactivada.</div>
+    {% endif %}
+    {% if stage_updated %}
+      <div class="alertx">La etapa comercial fue actualizada.</div>
+    {% endif %}
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="main-top">
+        <div class="contact-grid">
+          <div class="mini">
+            <div class="lbl">Contacto</div>
+            <div class="val">{{ contact_name or "-" }}</div>
+          </div>
+          <div class="mini">
+            <div class="lbl">Teléfono</div>
+            <div class="val">{{ contact_phone or "-" }}</div>
+          </div>
+          <div class="mini">
+            <div class="lbl">Email</div>
+            <div class="val">{{ contact_email or "-" }}</div>
+          </div>
+          <div class="mini">
+            <div class="lbl">Intent actual</div>
+            <div class="val">{{ row.intent_last or "-" }}</div>
+          </div>
+          <div class="mini">
+            <div class="lbl">Followup</div>
+            <div class="val">{{ row.followup_id or "-" }}</div>
+          </div>
+          <div class="mini">
+            <div class="lbl">Prospecto</div>
+            <div class="val">{{ row.prospect_id or "-" }}</div>
+          </div>
+          <div class="mini">
+            <div class="lbl">Alumno</div>
+            <div class="val">{{ row.student_id or "-" }}</div>
+          </div>
+          <div class="mini">
+            <div class="lbl">Último mensaje</div>
+            <div class="val">
+              {{ row.last_message_at.strftime("%d/%m/%Y %H:%M") if row.last_message_at else "-" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-topbar">
+        <h3 class="chat-title">Mensajes</h3>
+        <div class="chat-tools">
+          <a class="btn btn-outline-secondary btn-sm" href="/admin/conversations">Volver al listado</a>
+          <a class="btn btn-outline-secondary btn-sm" href="/admin/conversations/{{ row.id }}">Actualizar</a>
+          <a class="btn btn-outline-secondary btn-sm" href="/admin/conversations/{{ row.id }}/messages" target="_blank">Ver parcial</a>
+        </div>
+      </div>
+
+      <div id="chat-scroll" class="chat-wrap">
+        {% for msg in messages %}
+          {% set cls = 'user' if msg.is_inbound else 'bot' %}
+          {% set sender_label = msg.sender_type.value if msg.sender_type else ('INBOUND' if msg.is_inbound else 'OUTBOUND') %}
+          {% set sender_badge = 'badge-muted' %}
+
+          {% if msg.sender_type and msg.sender_type.value == 'HUMANO' %}
+            {% set cls = 'human' %}
+            {% set sender_badge = 'badge-success' %}
+          {% elif msg.sender_type and msg.sender_type.value == 'SISTEMA' %}
+            {% set cls = 'system' %}
+            {% set sender_badge = 'badge-warn' %}
+          {% elif msg.is_inbound %}
+            {% set cls = 'user' %}
+            {% set sender_badge = 'badge-muted' %}
+          {% else %}
+            {% set cls = 'bot' %}
+            {% set sender_badge = 'badge-info' %}
+          {% endif %}
+
+          <div class="msg {{ cls }}">
+            <div class="msg-head">
+              <div class="msg-head-left">
+                <span class="badge {{ sender_badge }}">{{ sender_label }}</span>
+                {% if msg.intent_detected %}
+                  <span class="badge badge-muted">{{ msg.intent_detected }}</span>
+                {% endif %}
+                {% if msg.delivery_status %}
+                  <span class="badge badge-muted">{{ msg.delivery_status }}</span>
+                {% endif %}
+              </div>
+              <span>
+                {{ msg.created_at.strftime("%d/%m/%Y %H:%M") if msg.created_at else "" }}
+              </span>
+            </div>
+
+            <div class="msg-text">{{ msg.message_text or "" }}</div>
+
+            <div class="msg-meta">
+              {% if msg.external_ref %}
+                Ref: {{ msg.external_ref }}
+              {% endif %}
+            </div>
+          </div>
+        {% else %}
+          <div class="muted">No hay mensajes en esta conversación.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="panel side-section">
+        <h3 class="side-title">Resumen comercial</h3>
+
+        <div class="summary-box">
+          <div class="summary-k">Etapa</div>
+          <div class="summary-v">{{ commercial_summary.commercial_stage or "-" }}</div>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-k">Temperatura</div>
+          <div class="summary-v">{{ commercial_summary.lead_temperature or "-" }}</div>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-k">Último intent</div>
+          <div class="summary-v">{{ commercial_summary.intent_last or "-" }}</div>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-k">Motivo de handoff</div>
+          <div class="summary-v">{{ commercial_summary.handoff_reason or "-" }}</div>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-k">Mensajes</div>
+          <div class="summary-v">
+            Total {{ commercial_summary.total_messages or 0 }} ·
+            Inbound {{ commercial_summary.inbound_messages or 0 }} ·
+            Outbound {{ commercial_summary.outbound_messages or 0 }}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel side-section">
+        <h3 class="side-title">Sugerencias rápidas</h3>
+        <div class="quick-list">
+          {% for s in suggestions %}
+            <span class="badge badge-muted">{{ s }}</span>
+          {% else %}
+            <span class="muted">Sin sugerencias por ahora.</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="panel side-section">
+        <h3 class="side-title">Acciones de conversación</h3>
+
+        <div class="stack">
+          <div class="row-actions">
+            <form method="post" action="/admin/conversations/{{ row.id }}/pause">
+              <button type="submit" class="btn btn-outline-warning">Pausar asistente</button>
+            </form>
+
+            <form method="post" action="/admin/conversations/{{ row.id }}/resume">
+              <button type="submit" class="btn btn-outline-success">Reanudar asistente</button>
+            </form>
+          </div>
+
+          <div class="row-actions">
+            <form method="post" action="/admin/conversations/{{ row.id }}/mark-reactivated">
+              <button type="submit" class="btn btn-outline-primary">Marcar reactivado</button>
+            </form>
+
+            <form method="post" action="/admin/conversations/{{ row.id }}/mark-handoff">
+              <button type="submit" class="btn btn-outline-danger">Derivar a humano</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel side-section">
+        <h3 class="side-title">Enviar mensaje manual</h3>
+
+        <form method="post" action="/admin/conversations/{{ row.id }}/send" class="form-grid">
+          <div>
+            <label for="message_text">Mensaje</label>
+            <textarea id="message_text" name="message_text" placeholder="Escribí el mensaje..."></textarea>
+          </div>
+
+          <div>
+            <label for="pause_assistant_send">Pausar asistente</label>
+            <select id="pause_assistant_send" name="pause_assistant">
+              <option value="1" selected>Sí</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+
+          <div>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel side-section">
+        <h3 class="side-title">Mensaje rápido</h3>
+
+        <form method="post" action="/admin/conversations/{{ row.id }}/quick-send" class="form-grid">
+          <div>
+            <label for="kind">Tipo</label>
+            <select id="kind" name="kind">
+              <option value="saludo">Saludo</option>
+              <option value="precios">Precios</option>
+              <option value="seguimiento">Seguimiento</option>
+              <option value="reactivacion">Reactivación</option>
+              <option value="cierre">Cierre</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="pause_assistant_quick">Pausar asistente</label>
+            <select id="pause_assistant_quick" name="pause_assistant">
+              <option value="1" selected>Sí</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+
+          <div>
+            <button type="submit" class="btn btn-outline-secondary">Enviar rápido</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel side-section">
+        <h3 class="side-title">Cambiar etapa comercial</h3>
+
+        <form method="post" action="/admin/conversations/{{ row.id }}/stage" class="form-grid">
+          <div>
+            <label for="stage">Etapa</label>
+            <select id="stage" name="stage">
+              <option value="NUEVO">NUEVO</option>
+              <option value="INTERESADO">INTERESADO</option>
+              <option value="CALIFICADO">CALIFICADO</option>
+              <option value="NEGOCIANDO">NEGOCIANDO</option>
+              <option value="DERIVADO">DERIVADO</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="note">Nota</label>
+            <textarea id="note" name="note" placeholder="Detalle breve del cambio..."></textarea>
+          </div>
+
+          <div>
+            <button type="submit" class="btn btn-outline-primary">Actualizar etapa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const chat = document.getElementById("chat-scroll");
+    if (!chat) return;
+
+    const key = "conversation-detail-scroll-{{ row.id }}";
+
+    try {
+      const saved = sessionStorage.getItem(key);
+      if (saved !== null) {
+        chat.scrollTop = parseInt(saved, 10) || 0;
+      } else {
+        chat.scrollTop = chat.scrollHeight;
+      }
+    } catch (e) {}
+
+    chat.addEventListener("scroll", function () {
+      try {
+        sessionStorage.setItem(key, String(chat.scrollTop));
+      } catch (e) {}
+    });
+
+    const forms = document.querySelectorAll("form");
+    forms.forEach(function (form) {
+      form.addEventListener("submit", function () {
+        try {
+          sessionStorage.setItem(key, String(chat.scrollTop));
+        } catch (e) {}
+      });
+    });
+
+    setInterval(function () {
+      const active = document.activeElement;
+      const isTyping =
+        active &&
+        (active.tagName === "TEXTAREA" || active.tagName === "INPUT" || active.tagName === "SELECT");
+
+      if (isTyping) return;
+
+      fetch("/admin/conversations/{{ row.id }}/messages", {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          const body = doc.body;
+          if (!body) return;
+
+          if (body.innerHTML && body.innerHTML.trim()) {
+            chat.innerHTML = body.innerHTML;
+          }
+        })
+        .catch(function () {});
+    }, 30000);
+  })();
+</script>
+
+{% endblock %}

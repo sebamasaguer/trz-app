@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1450px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .filters{display:grid;grid-template-columns:1fr 1fr auto auto;gap:12px;align-items:end;margin-bottom:16px}
+  @media (max-width:900px){.filters{grid-template-columns:1fr}}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.72;margin:0 0 8px}
+  .inp,.sel{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+  .section-title{font-size:28px;font-weight:900;margin:0 0 12px}
+  .alertx{padding:14px 16px;border-radius:14px}
+  .alert-warn{background:rgba(231,76,60,.18);border:1px solid rgba(231,76,60,.28)}
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Inscripciones a clases</h1>
+      <div class="sub">Administrativo o alumno pueden anotarse a cualquier grupo con cupo disponible.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      {% if me.role.value in ["ADMINISTRADOR", "ADMINISTRATIVO"] %}
+      <a class="btn btn-outline-secondary" href="/admin/classes">Clases y grupos</a>
+      {% endif %}
+      <a class="btn btn-outline-secondary" href="/alumno/app">Volver</a>
+    </div>
+  </div>
+
+  {% if me.role.value in ["ADMINISTRADOR", "ADMINISTRATIVO"] %}
+  <div class="cardx" style="margin-bottom:16px">
+    <form method="get" class="filters">
+      <div>
+        <label class="lbl">Buscar alumno</label>
+        <input class="inp" type="text" name="q" value="{{ q }}" placeholder="Nombre, email, DNI...">
+      </div>
+      <div>
+        <label class="lbl">Día</label>
+        <select class="sel" name="weekday">
+          <option value="">Todos</option>
+          {% for d in weekdays %}
+          <option value="{{ d }}" {% if weekday == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Por página</label>
+        <select class="sel" name="page_size">
+          {% for size in [10,20,50,100] %}
+          <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" type="submit">Filtrar</button>
+        <a class="btn btn-outline-secondary" href="/admin/classes/enrollments">Limpiar</a>
+      </div>
+    </form>
+    <div class="meta">Total grupos: {{ total }} · Página {{ page }} de {{ total_pages }}</div>
+  </div>
+  {% endif %}
+
+  {% if me.role.value == "ALUMNO" %}
+  <div class="cardx" style="margin-bottom:16px">
+    <h3 class="section-title">Disponibilidad mensual</h3>
+
+    <div class="list">
+      <div class="item">
+        <div><strong>FUNCIONAL</strong></div>
+        <div class="meta">Clases disponibles: {{ available_funcional if available_funcional is not none else 0 }}</div>
+      </div>
+
+      <div class="item">
+        <div><strong>MUSCULACION</strong></div>
+        <div class="meta">Clases disponibles: {{ available_musculacion if available_musculacion is not none else 0 }}</div>
+      </div>
+    </div>
+
+    {% if (available_slots or 0) <= 0 %}
+      <div class="alertx alert-warn" style="margin-top:14px">
+        No tenés clases disponibles. Para nuevas inscripciones debés regularizar el mes.
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="cardx" style="margin-bottom:16px">
+    <h3 class="section-title">Mis inscripciones activas</h3>
+    <div class="list">
+      {% for row in my_active_rows %}
+      <div class="item">
+        <div><strong>{{ row.group.gym_class.name }}</strong></div>
+        <div class="meta">{{ row.group.name or "Grupo" }}</div>
+        <div class="meta">{{ row.group.weekday.value }} · {{ row.group.start_time.strftime("%H:%M") }} - {{ row.group.end_time.strftime("%H:%M") }}</div>
+
+        <div style="margin-top:12px">
+          <form method="post" action="/admin/classes/enrollments/{{ row.id }}/cancel">
+            <button class="btn btn-outline-secondary" type="submit">Cancelar inscripción</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="item">Todavía no estás inscripto en ninguna clase.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="cardx">
+    <h3 class="section-title">Clases disponibles para inscribirme</h3>
+    <div class="meta" style="margin-bottom:12px">Página {{ page }} de {{ total_pages }}</div>
+    <div class="list">
+      {% set ns = namespace(has_available=false) %}
+      {% for g in groups %}
+      {% set current = counts.get(g.id, 0) %}
+      {% set enr = my_enrollments.get(g.id) %}
+
+      {% if not enr %}
+      {% set ns.has_available = true %}
+      <div class="item">
+        <div><strong>{{ g.gym_class.name }}</strong></div>
+        <div class="meta">{{ g.name or "Grupo" }}</div>
+        <div class="meta">{{ g.gym_class.service_kind.value }} · {{ g.weekday.value }} · {{ g.start_time.strftime("%H:%M") }} - {{ g.end_time.strftime("%H:%M") }}</div>
+        <div class="meta">Cupo: {{ current }}/{{ g.capacity }}</div>
+
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          {% set class_slots = available_funcional if g.gym_class.service_kind.value == "FUNCIONAL" else available_musculacion %}
+          <form method="post" action="/admin/classes/groups/{{ g.id }}/enroll">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              {% if current >= g.capacity or not class_slots or class_slots <= 0 %}disabled{% endif %}
+            >
+              {% if current >= g.capacity %}
+                Sin cupo
+              {% elif not class_slots or class_slots <= 0 %}
+                Sin clases disponibles para {{ g.gym_class.service_kind.value }}
+              {% else %}
+                Inscribirme
+              {% endif %}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+
+      {% if not ns.has_available %}
+      <div class="item">No hay clases disponibles para inscribirte en este momento.</div>
+      {% endif %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pager">
+      <div class="meta">Página {{ page }} de {{ total_pages }}</div>
+      <div style="display:flex;gap:10px">
+        <a class="btn btn-outline-secondary {% if not has_prev %}disabled{% endif %}"
+           href="/admin/classes/enrollments?weekday={{ weekday }}&page={{ prev_page }}&page_size={{ page_size }}">
+          Anterior
+        </a>
+        <a class="btn btn-outline-secondary {% if not has_next %}disabled{% endif %}"
+           href="/admin/classes/enrollments?weekday={{ weekday }}&page={{ next_page }}&page_size={{ page_size }}">
+          Siguiente
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% else %}
+  <div class="cardx">
+    <div class="meta" style="margin-bottom:12px">Total grupos: {{ total }} · Página {{ page }} de {{ total_pages }}</div>
+    <div class="list">
+      {% for g in groups %}
+      {% set current = counts.get(g.id, 0) %}
+      <div class="item">
+        <div><strong>{{ g.gym_class.name }}</strong></div>
+        <div class="meta">{{ g.name or "Grupo" }}</div>
+        <div class="meta">{{ g.gym_class.service_kind.value }} · {{ g.weekday.value }} · {{ g.start_time.strftime("%H:%M") }} - {{ g.end_time.strftime("%H:%M") }}</div>
+        <div class="meta">Cupo: {{ current }}/{{ g.capacity }}</div>
+        <div class="meta" style="margin-top:6px">
+          Si el alumno no tiene clases disponibles, el sistema lo inscribe igual y deja nota automática de cobro.
+        </div>
+
+        <form method="post" action="/admin/classes/groups/{{ g.id }}/enroll" style="margin-top:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="lbl">Alumno</label>
+              <select class="sel" name="student_id" required>
+                <option value="">Seleccionar</option>
+                {% for s in student_options %}
+                <option value="{{ s.id }}">{{ s.full_name or s.email }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="lbl">Notas</label>
+              <input class="inp" type="text" name="notes">
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn btn-primary" type="submit" {% if current >= g.capacity %}disabled{% endif %}>Inscribir</button>
+          </div>
+        </form>
+      </div>
+      {% else %}
+      <div class="item">No hay grupos disponibles.</div>
+      {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pager">
+      <div class="meta">Página {{ page }} de {{ total_pages }}</div>
+      <div style="display:flex;gap:10px">
+        <a class="btn btn-outline-secondary {% if not has_prev %}disabled{% endif %}"
+           href="/admin/classes/enrollments?q={{ q }}&weekday={{ weekday }}&page={{ prev_page }}&page_size={{ page_size }}">
+          Anterior
+        </a>
+        <a class="btn btn-outline-secondary {% if not has_next %}disabled{% endif %}"
+           href="/admin/classes/enrollments?q={{ q }}&weekday={{ weekday }}&page={{ next_page }}&page_size={{ page_size }}">
+          Siguiente
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

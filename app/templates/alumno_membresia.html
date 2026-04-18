@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .card-soft{
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,.07);
+    box-shadow: 0 10px 22px rgba(0,0,0,.06);
+    overflow: hidden;
+  }
+  .head{
+    background: linear-gradient(135deg, rgba(0,0,0,.85), rgba(0,0,0,.65));
+    color:#fff;
+    padding: 1rem 1.1rem;
+  }
+  .kpi{
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(0,0,0,.20);
+    padding: .65rem .85rem;
+    min-width: 170px;
+  }
+  .kpi .lbl{ font-size:.78rem; opacity:.8; }
+  .kpi .val{ font-weight:800; font-size:1.15rem; }
+  .pill{
+    display:inline-block;
+    padding:.25rem .6rem;
+    border-radius:999px;
+    font-weight:800;
+    border:1px solid rgba(0,0,0,.12);
+    background:rgba(0,0,0,.03);
+    font-size:.82rem;
+  }
+  .status-badge{
+    display:inline-block;
+    padding:.35rem .7rem;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:800;
+    color:#fff;
+  }
+  .status-ok{ background:#198754; }
+  .status-pend{ background:#d39e00; }
+  .status-cancel{ background:#c0392b; }
+  .table-darksoft{
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .table-darksoft table{
+    margin-bottom:0;
+  }
+  .table-darksoft .table > :not(caption) > * > *{
+    background: rgba(255,255,255,.03) !important;
+  }
+  .table-darksoft .table thead th{
+    background: rgba(255,255,255,.06) !important;
+    color:#fff !important;
+    border-color: rgba(255,255,255,.08) !important;
+  }
+  .table-darksoft .table td{
+    border-color: rgba(255,255,255,.08) !important;
+    vertical-align: middle;
+  }
+</style>
+
+<div class="container py-3" style="max-width: 1100px;">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+      <h3 class="mb-1">Mi membresía</h3>
+      <div class="text-muted small">
+        Periodo: <strong>{{ period }}</strong> · Alumno: <strong>{{ me.full_name }}</strong>
+      </div>
+    </div>
+    <a class="btn btn-outline-secondary" href="/logout">Salir</a>
+  </div>
+
+  {% if not assignment %}
+    <div class="alert alert-info mb-4">
+      No tenés una membresía activa para el mes <strong>{{ period }}</strong>.
+    </div>
+  {% else %}
+    <div class="card-soft mb-4">
+      <div class="head">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <h4 class="mb-1" style="font-weight:900;">{{ membership.name }}</h4>
+            <div style="opacity:.85;">
+              Tipo: <strong>{{ membership.kind.value }}</strong>
+              {% if assignment.start_date %} · Inicio: <strong>{{ assignment.start_date }}</strong>{% endif %}
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <div class="kpi">
+              <div class="lbl">Clases que te quedan · Funcional</div>
+              <div class="val">{{ funcional_left }}</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">Clases que te quedan · Musculación</div>
+              <div class="val">{{ muscu_left }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="mb-2"><span class="pill">Precios actuales</span></div>
+            <div class="text-muted small">
+              LISTA:
+              <strong>
+                {% if prices.get("LISTA") is not none %}
+                  ${{ prices.get("LISTA") }}
+                {% else %}
+                  -
+                {% endif %}
+              </strong>
+              <br>
+              EFECTIVO:
+              <strong>
+                {% if prices.get("EFECTIVO") is not none %}
+                  ${{ prices.get("EFECTIVO") }}
+                {% else %}
+                  -
+                {% endif %}
+              </strong>
+              <br>
+              TRANSFERENCIA:
+              <strong>
+                {% if prices.get("TRANSFERENCIA") is not none %}
+                  ${{ prices.get("TRANSFERENCIA") }}
+                {% else %}
+                  -
+                {% endif %}
+              </strong>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-2"><span class="pill">Tu asignación</span></div>
+            <div class="text-muted small">
+              Método: <strong>{{ assignment.payment_method.value if assignment.payment_method else "-" }}</strong><br>
+              Importe guardado:
+              <strong>
+                {% if assignment.amount_snapshot is not none %}
+                  ${{ assignment.amount_snapshot }}
+                {% else %}
+                  -
+                {% endif %}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-3">
+
+        <div class="text-muted small">
+          * Esta membresía vence automáticamente al finalizar el mes <strong>{{ period }}</strong>.
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="card-soft">
+    <div class="p-3 border-bottom" style="border-color: rgba(255,255,255,.08) !important;">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h4 class="mb-1" style="font-weight:900;">Mis pagos</h4>
+          <div class="text-muted small">
+            Historial de pagos registrados en el sistema
+          </div>
+        </div>
+        <div class="text-muted small">
+          Total acreditado: <strong>${{ total_acreditado }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-3">
+      <div class="table-responsive table-darksoft">
+        <table class="table table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Concepto</th>
+              <th>Período</th>
+              <th>Importe</th>
+              <th>Método</th>
+              <th>Estado</th>
+              <th>Comprobante</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+              <tr>
+                <td>
+                  {% if p.paid_at %}
+                    {{ p.paid_at.strftime("%d/%m/%Y %H:%M") }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>{{ p.concept }}</td>
+                <td>{{ p.period_yyyymm or "-" }}</td>
+                <td>${{ p.amount }}</td>
+                <td>{{ p.payment_method.value if p.payment_method else "-" }}</td>
+                <td>
+                  {% if p.status.value == "ACREDITADO" %}
+                    <span class="status-badge status-ok">ACREDITADO</span>
+                  {% elif p.status.value == "PENDIENTE" %}
+                    <span class="status-badge status-pend">PENDIENTE</span>
+                  {% else %}
+                    <span class="status-badge status-cancel">ANULADO</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if p.receipt_image_path %}
+                    <a href="{{ p.receipt_image_path }}" target="_blank">Ver comprobante</a>
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  No tenés pagos registrados todavía.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

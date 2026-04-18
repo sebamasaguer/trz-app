@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1450px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:16px}
+  @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.72;margin:0 0 8px}
+  .inp,.sel{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .list{display:flex;flex-direction:column;gap:14px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+  .groups{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+  .group{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px}
+  .filters{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px}
+  @media (max-width:1100px){.filters{grid-template-columns:1fr}}
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Clases y grupos</h1>
+      <div class="sub">Administración de horarios, grupos y cupos por clase.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/classes/enrollments">Ir a inscripciones</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="cardx">
+      <div class="lbl">Nueva clase</div>
+      <form method="post" action="/admin/classes/new" style="display:grid;gap:10px">
+        <div>
+          <label class="lbl">Nombre</label>
+          <input class="inp" type="text" name="name" required>
+        </div>
+        <div>
+          <label class="lbl">Descripción</label>
+          <input class="inp" type="text" name="description">
+        </div>
+        <div>
+          <label class="lbl">Tipo</label>
+          <select class="sel" name="service_kind">
+            {% for kind in service_kinds %}
+            <option value="{{ kind }}">{{ kind }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Estado</label>
+          <select class="sel" name="status">
+            {% for s in statuses %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit">Crear clase</button>
+      </form>
+    </div>
+
+    <div class="cardx">
+      <form method="get" class="filters">
+        <div>
+          <label class="lbl">Buscar</label>
+          <input class="inp" type="text" name="q" value="{{ q }}" placeholder="Nombre o descripción">
+        </div>
+        <div>
+          <label class="lbl">Estado</label>
+          <select class="sel" name="status">
+            <option value="">Todos</option>
+            {% for s in statuses %}
+            <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Tipo</label>
+          <select class="sel" name="service_kind">
+            <option value="">Todos</option>
+            {% for kind in service_kinds %}
+            <option value="{{ kind }}" {% if service_kind_filter == kind %}selected{% endif %}>{{ kind }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Por página</label>
+          <select class="sel" name="page_size">
+            {% for size in [10,20,50,100] %}
+            <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;grid-column:1/-1;flex-wrap:wrap">
+          <button class="btn btn-primary" type="submit">Filtrar</button>
+          <a class="btn btn-outline-secondary" href="/admin/classes">Limpiar</a>
+        </div>
+      </form>
+
+      <div class="meta" style="margin-bottom:12px">
+        Total: {{ total }} · Página {{ page }} de {{ total_pages }}
+      </div>
+
+      <div class="list">
+        {% for c in classes %}
+        <div class="item">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <div><strong>{{ c.name }}</strong></div>
+              <div class="meta">{{ c.description or "-" }}</div>
+              <div class="meta">{{ c.service_kind.value }} · {{ c.status.value }}</div>
+            </div>
+          </div>
+
+          <div class="groups">
+            {% for g in c.groups %}
+            <div class="group">
+              <div><strong>{{ g.name or "Grupo" }}</strong></div>
+              <div class="meta">{{ g.weekday.value }} · {{ g.start_time.strftime("%H:%M") }} - {{ g.end_time.strftime("%H:%M") }}</div>
+              <div class="meta">Cupo activo: {{ group_counts.get(g.id, 0) }}/{{ g.capacity }}</div>
+              <div style="margin-top:10px">
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/classes/groups/{{ g.id }}">Ver detalle</a>
+              </div>
+            </div>
+            {% else %}
+            <div class="group">
+              <div class="meta">Sin grupos cargados.</div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div style="margin-top:16px">
+            <form method="post" action="/admin/classes/{{ c.id }}/groups/new" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">
+              <div>
+                <label class="lbl">Nombre</label>
+                <input class="inp" type="text" name="name" placeholder="Grupo mañana">
+              </div>
+              <div>
+                <label class="lbl">Día</label>
+                <select class="sel" name="weekday">
+                  {% for d in weekdays %}
+                  <option value="{{ d }}">{{ d }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <label class="lbl">Inicio</label>
+                <input class="inp" type="time" name="start_time" required>
+              </div>
+              <div>
+                <label class="lbl">Fin</label>
+                <input class="inp" type="time" name="end_time" required>
+              </div>
+              <div>
+                <label class="lbl">Capacidad</label>
+                <input class="inp" type="number" name="capacity" min="1" value="20" required>
+              </div>
+              <div>
+                <label class="lbl">Activo</label>
+                <select class="sel" name="is_active">
+                  <option value="1">Sí</option>
+                  <option value="0">No</option>
+                </select>
+              </div>
+              <div style="grid-column:1/-1">
+                <button class="btn btn-primary" type="submit">Agregar grupo</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <div class="item">No hay clases para mostrar.</div>
+        {% endfor %}
+      </div>
+
+      {% if total_pages > 1 %}
+      <div class="pager">
+        <div class="meta">Página {{ page }} de {{ total_pages }}</div>
+        <div style="display:flex;gap:10px">
+          <a class="btn btn-outline-secondary {% if not has_prev %}disabled{% endif %}"
+             href="/admin/classes?q={{ q }}&status={{ status_filter }}&service_kind={{ service_kind_filter }}&page={{ prev_page }}&page_size={{ page_size }}">
+            Anterior
+          </a>
+          <a class="btn btn-outline-secondary {% if not has_next %}disabled{% endif %}"
+             href="/admin/classes?q={{ q }}&status={{ status_filter }}&service_kind={{ service_kind_filter }}&page={{ next_page }}&page_size={{ page_size }}">
+            Siguiente
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

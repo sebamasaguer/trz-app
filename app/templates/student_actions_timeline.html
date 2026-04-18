@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1300px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:36px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .timeline{display:flex;flex-direction:column;gap:14px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:18px;padding:16px}
+  .meta{opacity:.72;font-size:14px;margin-top:4px}
+  .payload{white-space:pre-wrap;margin-top:10px;font-size:13px;opacity:.88}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Acciones comerciales</h1>
+      <div class="sub">{{ student.full_name or student.email }}</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/alumnos/{{ student.id }}/followups">Seguimientos</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Volver</a>
+    </div>
+  </div>
+
+  <div class="timeline">
+    {% for action in actions %}
+      {% set f = followup_map.get(action.followup_id) %}
+      <div class="cardx">
+        <div><strong>{{ action.action_type.value }}</strong></div>
+        <div class="meta">
+          {{ action.created_at.strftime("%d/%m/%Y %H:%M") if action.created_at else "-" }}
+          {% if action.channel %} · {{ action.channel.value }}{% endif %}
+          {% if action.created_by %} · {{ action.created_by.full_name or action.created_by.email }}{% endif %}
+        </div>
+        {% if f %}
+        <div class="meta">
+          Seguimiento: {{ f.title or "Sin título" }} · Estado actual: {{ f.status.value }}
+        </div>
+        {% endif %}
+        {% if action.summary %}
+        <div class="meta">{{ action.summary }}</div>
+        {% endif %}
+        {% if action.delivery_status %}
+        <div class="meta">Estado entrega: {{ action.delivery_status }}</div>
+        {% endif %}
+        {% if action.external_ref %}
+        <div class="meta">External ref: {{ action.external_ref }}</div>
+        {% endif %}
+        {% if action.payload_text %}
+        <div class="payload">{{ action.payload_text }}</div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="cardx">No hay acciones comerciales registradas para este alumno.</div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

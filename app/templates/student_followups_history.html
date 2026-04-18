@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1400px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:36px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .table-wrap{overflow:auto;border-radius:16px}
+  table{width:100%;border-collapse:collapse;min-width:1250px}
+  th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+  th{text-align:left;font-size:13px;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+  .tag{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+  .p-baja{background:rgba(99,118,128,.22)}
+  .p-media{background:rgba(166,109,0,.22)}
+  .p-alta{background:rgba(181,79,153,.22)}
+  .p-critica{background:rgba(198,40,40,.22)}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Historial de seguimientos</h1>
+      <div class="sub">{{ student.full_name or student.email }}</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/alumnos/{{ student.id }}/actions">Acciones</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Volver</a>
+    </div>
+  </div>
+
+  <div class="cardx">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Prioridad</th>
+            <th>Canal</th>
+            <th>Título</th>
+            <th>Próximo contacto</th>
+            <th>Resultado</th>
+            <th>Creado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          {% set act = row_actions.get(row.id, {}) %}
+          <tr>
+            <td>#{{ row.id }}</td>
+            <td>{{ row.kind.value }}</td>
+            <td>{{ row.status.value }}</td>
+            <td><span class="tag p-{{ row.priority.value|lower }}">{{ row.priority.value }}</span></td>
+            <td>{{ row.channel.value }}</td>
+            <td>{{ row.title or "-" }}</td>
+            <td>{% if row.next_contact_date %}{{ row.next_contact_date.strftime("%d/%m/%Y") }}{% else %}-{% endif %}</td>
+            <td>{{ row.result_summary or "-" }}</td>
+            <td>{{ row.created_at.strftime("%d/%m/%Y %H:%M") if row.created_at else "-" }}</td>
+            <td>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/followups/{{ row.id }}/edit">Editar</a>
+
+                <form method="post" action="/admin/followups/{{ row.id }}/send-whatsapp" style="display:inline">
+                  <button class="btn btn-sm btn-outline-secondary" type="submit">Enviar WhatsApp</button>
+                </form>
+
+                <form method="post" action="/admin/followups/{{ row.id }}/send-email" style="display:inline">
+                  <button class="btn btn-sm btn-outline-secondary" type="submit">Enviar Email</button>
+                </form>
+
+                {% if act.message %}
+                <button class="btn btn-sm btn-outline-secondary" type="button" onclick='copyText({{ act.message|tojson }})'>Copiar</button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="10" style="text-align:center;opacity:.72;padding:20px">No hay seguimientos registrados para este alumno.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  function copyText(text) {
+    navigator.clipboard.writeText(text || "").then(() => {
+      alert("Mensaje copiado");
+    });
+  }
+</script>
+
+{% endblock %}

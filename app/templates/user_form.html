@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h4 class="mb-3">{% if mode == 'edit' %}Editar usuario{% else %}Nuevo usuario{% endif %}</h4>
+
+    {% if error %}
+      <div class="alert alert-danger py-2">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="{% if mode == 'edit' %}/admin/users/{{ user.id }}/edit{% else %}/admin/users/new{% endif %}">
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input class="form-control" name="email" type="email" required
+                 value="{{ user.email if user else '' }}" />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Rol</label>
+          <select class="form-select" name="role" required>
+            {% for r in roles %}
+              <option value="{{ r }}" {% if user and user.role.value == r %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Nombre</label>
+          <input class="form-control" name="first_name" type="text" required
+                 value="{{ user.first_name if user else '' }}" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Apellido</label>
+          <input class="form-control" name="last_name" type="text" required
+                 value="{{ user.last_name if user else '' }}" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">DNI</label>
+          <input class="form-control" name="dni" type="text"
+                 value="{{ user.dni if user and user.dni else '' }}" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Fecha de nacimiento</label>
+          <input id="birth_date" class="form-control" name="birth_date" type="date"
+                 value="{% if user and user.birth_date %}{{ user.birth_date }}{% endif %}" />
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Edad</label>
+          <input id="age" class="form-control" type="text"
+                 value="{% if user and user.age is not none %}{{ user.age }}{% endif %}"
+                 readonly />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Dirección</label>
+          <input class="form-control" name="address" type="text"
+                 value="{{ user.address if user else '' }}" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Celular</label>
+          <input class="form-control" name="phone" type="text"
+                 value="{{ user.phone if user else '' }}" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Contacto de emergencia (Nombre)</label>
+          <input class="form-control" name="emergency_contact_name" type="text"
+                 value="{{ user.emergency_contact_name if user else '' }}" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Contacto de emergencia (Celular)</label>
+          <input class="form-control" name="emergency_contact_phone" type="text"
+                 value="{{ user.emergency_contact_phone if user else '' }}" />
+        </div>
+
+        {% if mode == 'edit' %}
+        <div class="col-md-4">
+          <label class="form-label">Activo</label>
+          <select class="form-select" name="is_active">
+            <option value="true" {% if user and user.is_active %}selected{% endif %}>Sí</option>
+            <option value="false" {% if user and not user.is_active %}selected{% endif %}>No</option>
+          </select>
+        </div>
+        {% endif %}
+
+        {% if mode != 'edit' %}
+        <div class="col-md-6">
+          <label class="form-label">Contraseña</label>
+          <input class="form-control" name="password" type="password" required />
+        </div>
+        {% endif %}
+
+      </div>
+
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <a class="btn btn-outline-secondary" href="/admin/users">Volver</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  const birth = document.getElementById("birth_date");
+  const ageEl = document.getElementById("age");
+
+  function calcAge(isoDate) {
+    if (!isoDate) return "";
+    const b = new Date(isoDate + "T00:00:00");
+    if (isNaN(b.getTime())) return "";
+    const today = new Date();
+    let years = today.getFullYear() - b.getFullYear();
+    const m = today.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) years--;
+    if (years < 0) return "";
+    return String(years);
+  }
+
+  function update() {
+    if (ageEl && birth) {
+      ageEl.value = calcAge(birth.value);
+    }
+  }
+
+  if (birth) {
+    birth.addEventListener("change", update);
+    birth.addEventListener("input", update);
+    update();
+  }
+})();
+</script>
+{% endblock %}

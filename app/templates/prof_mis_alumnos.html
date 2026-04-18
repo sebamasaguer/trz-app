@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid" style="max-width:1100px">
+  <div class="d-flex align-items-end justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+      <h3 class="mb-1">Mis alumnos</h3>
+      <div class="text-muted">Alumnos a tu cargo y asignación rápida de rutinas.</div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-primary" href="/profesor/routines">Rutinas</a>
+      <a class="btn btn-outline-primary" href="/profesor/assignments">Asignaciones</a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <form class="d-flex gap-2 flex-wrap" method="get" action="/profesor/alumnos">
+        <input class="form-control" style="max-width:320px" name="q" value="{{ q }}" placeholder="Buscar por nombre, DNI o email..." />
+        <button class="btn btn-primary" type="submit">Buscar</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Contacto</th>
+              <th>Rutina activa</th>
+              <th style="min-width:360px">Asignar nueva rutina</th>
+              <th>Historial</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in alumnos %}
+              <tr>
+                <td>
+                  <div class="fw-bold">{{ s.last_name }} {{ s.first_name }}</div>
+                  <div class="text-muted" style="font-size:12px">ID {{ s.id }}{% if s.dni %} · DNI {{ s.dni }}{% endif %}</div>
+                </td>
+
+                <td>
+                  <div>{{ s.email }}</div>
+                  <div class="text-muted" style="font-size:12px">{{ s.phone or "-" }}</div>
+                </td>
+
+                <td>
+                  {% set a = active_by_student.get(s.id) %}
+                  {% if a %}
+                    <div class="fw-bold">{{ a.routine.title }}</div>
+                    <div class="text-muted" style="font-size:12px">{{ a.routine.routine_type.value }}{% if a.start_date %} · inicio {{ a.start_date }}{% endif %}</div>
+                  {% else %}
+                    <span class="text-muted">Sin rutina activa</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <form class="row g-2" method="post" action="/profesor/alumnos/{{ s.id }}/assign">
+                    <div class="col-md-7">
+                      <select class="form-select form-select-sm" name="routine_id" required>
+                        <option value="">Seleccionar rutina...</option>
+                        {% for r in routines %}
+                          <option value="{{ r.id }}">{{ r.title }} ({{ r.routine_type.value }})</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <input type="date" class="form-control form-control-sm" name="start_date" />
+                    </div>
+                    <div class="col-md-2 d-grid">
+                      <button class="btn btn-primary btn-sm" type="submit">Asignar</button>
+                    </div>
+                  </form>
+                </td>
+
+                <td>
+                  <a class="btn btn-outline-secondary btn-sm" href="/profesor/assignments/history/{{ s.id }}">Ver</a>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-muted">No tenés alumnos a cargo todavía.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+{% endblock %}

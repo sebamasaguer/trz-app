@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .trz-wrap{max-width:1100px;margin:0 auto;padding:18px;}
+  .trz-head{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:14px;}
+  .trz-title{margin:0;font-size:22px;font-weight:800;letter-spacing:.2px}
+  .trz-sub{margin:4px 0 0;opacity:.8}
+  .trz-card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:16px;padding:14px}
+  .trz-row{display:flex;gap:10px;flex-wrap:wrap}
+  .trz-input{width:260px;max-width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.12);color:inherit}
+  .trz-btn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+  .trz-btn:hover{background:rgba(255,255,255,.12)}
+  .trz-table{width:100%;border-collapse:separate;border-spacing:0 10px;margin-top:10px}
+  .trz-table th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.7;text-align:left;padding:0 10px}
+  .trz-tr{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
+  .trz-td{padding:12px 10px;vertical-align:top}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14)}
+  .muted{opacity:.75}
+</style>
+
+<div class="trz-wrap">
+  <div class="trz-head">
+    <div>
+      <h1 class="trz-title">Ejercicios</h1>
+      <p class="trz-sub">Cargá tu biblioteca de ejercicios. Solo vos los vas a ver.</p>
+    </div>
+    <a class="trz-btn" href="/profesor/exercises/new">➕ Nuevo ejercicio</a>
+  </div>
+
+  <div class="trz-card">
+    <form class="trz-row" method="get" action="/profesor/exercises">
+      <input class="trz-input" type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre..." />
+      <button class="trz-btn" type="submit">🔎 Buscar</button>
+      <a class="trz-btn" href="/profesor/routines">📋 Ver rutinas</a>
+    </form>
+
+    <table class="trz-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Grupo / Equipo</th>
+          <th>Descripción</th>
+          <th>Creado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in items %}
+          <tr class="trz-tr">
+            <td class="trz-td">
+              <div style="font-weight:800">{{ e.name }}</div>
+              <div class="muted" style="font-size:12px">ID #{{ e.id }}</div>
+            </td>
+            <td class="trz-td">
+              {% if e.muscle_group %}<span class="pill">{{ e.muscle_group }}</span>{% endif %}
+              {% if e.equipment %}<span class="pill">{{ e.equipment }}</span>{% endif %}
+              {% if (not e.muscle_group) and (not e.equipment) %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td class="trz-td">
+              <div class="muted">{{ e.description or "—" }}</div>
+            </td>
+            <td class="trz-td">
+              <div class="muted">{{ e.created_at }}</div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="4" class="trz-td muted">No hay ejercicios todavía. Creá el primero con “Nuevo ejercicio”.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

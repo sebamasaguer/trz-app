@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .page-wrap{max-width:1020px;margin:0 auto;padding:18px;}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:34px;font-weight:900;margin:0}
+  .hero .sub{opacity:.72;margin-top:6px}
+
+  .top-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .card2{
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    border-radius:20px;
+    overflow:visible;
+  }
+  .card2 .body{padding:18px;overflow:visible}
+  .card2 .foot{
+    padding:14px 18px;
+    border-top:1px solid rgba(255,255,255,.08);
+    display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;
+  }
+
+  .lbl{
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    opacity:.78;
+    margin:0 0 8px;
+  }
+
+  .inp,.sel,.ta{
+    width:100%;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);
+    background:#2a2f36;
+    color:#fff;
+  }
+
+  .ta{
+    min-height:84px;
+    resize:vertical;
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width: 860px){
+    .grid2{grid-template-columns:1fr}
+  }
+
+  .hint{
+    font-size:12px;
+    opacity:.72;
+    margin-top:6px;
+  }
+
+  .student-picker{
+    position:relative;
+  }
+
+  .student-search-wrap{
+    position:relative;
+  }
+
+  .student-search{
+    border-radius:16px !important;
+    padding-right:46px;
+    height:58px;
+    background:linear-gradient(180deg, rgba(42,47,54,1), rgba(35,40,48,1));
+    transition:.18s ease;
+  }
+
+  .student-search:focus{
+    outline:none;
+    border-color:rgba(181,79,153,.72);
+    box-shadow:0 0 0 3px rgba(181,79,153,.12);
+  }
+
+  .student-clear-x{
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    width:28px;
+    height:28px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.04);
+    color:#d7dbe0;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:.15s ease;
+    font-size:14px;
+    line-height:1;
+  }
+
+  .student-clear-x:hover{
+    border-color:rgba(181,79,153,.70);
+    background:rgba(181,79,153,.12);
+    color:#fff;
+  }
+
+  .student-dropdown{
+    position:absolute;
+    top:calc(100% + 10px);
+    left:0;
+    right:0;
+    z-index:50;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(33,37,44,.98), rgba(25,29,35,.98));
+    box-shadow:0 22px 40px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+
+  .student-results{
+    max-height:260px;
+    overflow-y:auto;
+    padding:8px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .student-results::-webkit-scrollbar{width:10px}
+  .student-results::-webkit-scrollbar-thumb{
+    background:rgba(181,79,153,.35);
+    border-radius:999px;
+  }
+
+  .student-result-item{
+    width:100%;
+    text-align:left;
+    border:1px solid rgba(255,255,255,.06);
+    background:rgba(255,255,255,.03);
+    color:#f1f3f5;
+    border-radius:14px;
+    padding:12px 14px;
+    transition:.15s ease;
+    cursor:pointer;
+  }
+
+  .student-result-item:hover,
+  .student-result-item.active{
+    border-color:rgba(181,79,153,.70);
+    background:rgba(181,79,153,.10);
+  }
+
+  .student-result-name{
+    font-weight:900;
+    font-size:1rem;
+    line-height:1.2;
+  }
+
+  .student-result-meta{
+    font-size:.88rem;
+    opacity:.75;
+    margin-top:3px;
+    line-height:1.25;
+  }
+
+  .student-empty{
+    padding:14px 16px;
+    font-size:.92rem;
+    opacity:.72;
+  }
+
+  .student-selected{
+    margin-top:12px;
+    border:1px solid rgba(181,79,153,.45);
+    background:rgba(181,79,153,.10);
+    border-radius:16px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .student-selected .student-name{
+    font-weight:900;
+    font-size:1rem;
+    line-height:1.2;
+  }
+
+  .student-selected .student-meta{
+    font-size:.9rem;
+    opacity:.78;
+    margin-top:3px;
+  }
+
+  .d-none{display:none !important;}
+
+  @media (max-width: 700px){
+    .student-selected{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+    .student-selected .btn{
+      width:100%;
+    }
+  }
+</style>
+
+<div class="page-wrap">
+  <div class="hero">
+    <div>
+      <h1>Consumir cupo (asistencia)</h1>
+      <div class="sub">Registrá asistencias respetando reglas de día, horario, servicio y cupo disponible.</div>
+    </div>
+
+    <div class="top-actions">
+      <a class="btn btn-outline-secondary" href="/admin/memberships">Membresías</a>
+      <a class="btn btn-outline-secondary" href="/admin/memberships/report">Reporte</a>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  {% if ok %}
+    <div class="alert alert-success">{{ ok }}</div>
+  {% endif %}
+
+  <form method="post" action="/admin/memberships/consume">
+    <div class="card2">
+      <div class="body">
+
+        <div class="mb-3">
+          <label class="lbl">Alumno</label>
+
+          <input type="hidden" name="student_id" id="student_id_consume" required>
+
+          <div class="student-picker" id="student_picker_consume">
+            <div class="student-search-wrap">
+              <input
+                class="inp student-search"
+                type="text"
+                id="student_search_consume"
+                placeholder="Buscar por nombre, apellido, email o DNI..."
+                autocomplete="off"
+              >
+              <button type="button" class="student-clear-x" id="student_clear_x_consume" title="Limpiar">✕</button>
+
+              <div class="student-dropdown d-none" id="student_dropdown_consume">
+                <div class="student-results" id="student_results_consume">
+                  {% for s in students %}
+                    <button
+                      type="button"
+                      class="student-result-item"
+                      data-id="{{ s.id }}"
+                      data-name="{{ s.full_name or ((s.first_name or '') ~ ' ' ~ (s.last_name or '')) }}"
+                      data-email="{{ s.email or '' }}"
+                      data-dni="{{ s.dni or '' }}"
+                      data-search="{{ (s.first_name or '')|lower }} {{ (s.last_name or '')|lower }} {{ (s.full_name or '')|lower }} {{ (s.email or '')|lower }} {{ (s.dni or '')|lower }}"
+                    >
+                      <div class="student-result-name">
+                        {{ s.full_name or ((s.first_name or '') ~ ' ' ~ (s.last_name or '')) }}
+                      </div>
+                      <div class="student-result-meta">
+                        {% if s.dni %}DNI {{ s.dni }}{% endif %}
+                        {% if s.email %} · {{ s.email }}{% endif %}
+                      </div>
+                    </button>
+                  {% endfor %}
+                </div>
+                <div class="student-empty d-none" id="student_empty_consume">No se encontraron alumnos.</div>
+              </div>
+            </div>
+
+            <div class="student-selected d-none" id="student_selected_consume">
+              <div>
+                <div class="student-name" id="student_selected_name_consume"></div>
+                <div class="student-meta" id="student_selected_meta_consume"></div>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="student_clear_consume">Cambiar</button>
+            </div>
+          </div>
+
+          <div class="hint">Escribí para buscar y seleccioná el alumno.</div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label class="lbl">Servicio</label>
+            <select class="sel" name="service" required>
+              <option value="FUNCIONAL">FUNCIONAL</option>
+              <option value="MUSCULACION">MUSCULACIÓN</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="lbl">Fecha</label>
+            <input class="inp" type="date" name="used_at">
+            <div class="hint">Solo mes actual.</div>
+          </div>
+        </div>
+
+        <div class="grid2 mt-3">
+          <div>
+            <label class="lbl">Hora</label>
+            <input class="inp" type="time" name="used_time" value="07:00">
+            <div class="hint">Horario válido: 07:00–22:00.</div>
+          </div>
+
+          <div>
+            <label class="lbl">Notas (opcional)</label>
+            <input class="inp" type="text" name="notes" placeholder="Ej: turno mañana / observación...">
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <button class="btn btn-primary" type="submit">Registrar asistencia</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function () {
+    const wrap = document.getElementById("student_picker_consume");
+    const input = document.getElementById("student_search_consume");
+    const hidden = document.getElementById("student_id_consume");
+    const dropdown = document.getElementById("student_dropdown_consume");
+    const results = document.getElementById("student_results_consume");
+    const empty = document.getElementById("student_empty_consume");
+    const selectedBox = document.getElementById("student_selected_consume");
+    const selectedName = document.getElementById("student_selected_name_consume");
+    const selectedMeta = document.getElementById("student_selected_meta_consume");
+    const clearBtn = document.getElementById("student_clear_consume");
+    const clearX = document.getElementById("student_clear_x_consume");
+
+    if (!input || !hidden || !results || !dropdown) return;
+
+    const items = Array.from(results.querySelectorAll(".student-result-item"));
+    let currentIndex = -1;
+
+    function visibleItems() {
+      return items.filter(i => !i.classList.contains("d-none"));
+    }
+
+    function openDropdown() {
+      dropdown.classList.remove("d-none");
+    }
+
+    function closeDropdown() {
+      dropdown.classList.add("d-none");
+      currentIndex = -1;
+      items.forEach(i => i.classList.remove("active"));
+    }
+
+    function filterItems() {
+      const q = input.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      items.forEach(item => {
+        const haystack = item.dataset.search || "";
+        const show = !q || haystack.includes(q);
+        item.classList.toggle("d-none", !show);
+        if (show) visibleCount++;
+        item.classList.remove("active");
+      });
+
+      empty.classList.toggle("d-none", visibleCount > 0);
+      currentIndex = -1;
+      openDropdown();
+    }
+
+    function selectItem(item) {
+      const id = item.dataset.id;
+      const name = item.dataset.name || "";
+      const email = item.dataset.email || "";
+      const dni = item.dataset.dni || "";
+
+      hidden.value = id;
+      input.value = name;
+      selectedName.textContent = name;
+      selectedMeta.textContent = `${dni ? "DNI " + dni : ""}${dni && email ? " · " : ""}${email}`;
+      selectedBox.classList.remove("d-none");
+
+      items.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      closeDropdown();
+    }
+
+    function clearSelection() {
+      hidden.value = "";
+      input.value = "";
+      selectedBox.classList.add("d-none");
+      items.forEach(i => i.classList.remove("active"));
+      filterItems();
+      input.focus();
+    }
+
+    function activateItem(index) {
+      const visible = visibleItems();
+      if (!visible.length) return;
+
+      if (index < 0) index = visible.length - 1;
+      if (index >= visible.length) index = 0;
+
+      visible.forEach(i => i.classList.remove("active"));
+      visible[index].classList.add("active");
+      visible[index].scrollIntoView({ block: "nearest" });
+      currentIndex = index;
+    }
+
+    items.forEach(item => {
+      item.addEventListener("click", function () {
+        selectItem(this);
+      });
+    });
+
+    input.addEventListener("focus", function () {
+      filterItems();
+    });
+
+    input.addEventListener("input", function () {
+      hidden.value = "";
+      selectedBox.classList.add("d-none");
+      filterItems();
+    });
+
+    input.addEventListener("keydown", function (e) {
+      const visible = visibleItems();
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (dropdown.classList.contains("d-none")) openDropdown();
+        activateItem(currentIndex + 1);
+      }
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        activateItem(currentIndex - 1);
+      }
+
+      if (e.key === "Enter") {
+        if (!dropdown.classList.contains("d-none") && currentIndex >= 0 && visible[currentIndex]) {
+          e.preventDefault();
+          selectItem(visible[currentIndex]);
+        }
+      }
+
+      if (e.key === "Escape") {
+        closeDropdown();
+      }
+    });
+
+    clearBtn?.addEventListener("click", clearSelection);
+    clearX?.addEventListener("click", clearSelection);
+
+    document.addEventListener("click", function (e) {
+      if (!wrap.contains(e.target)) {
+        closeDropdown();
+      }
+    });
+
+    filterItems();
+    closeDropdown();
+  })();
+</script>
+
+{% endblock %}

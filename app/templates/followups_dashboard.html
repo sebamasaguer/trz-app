@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1450px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:38px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .gridkpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+  @media (max-width:1200px){.gridkpi{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:700px){.gridkpi{grid-template-columns:1fr}}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .kpi-title{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.7}
+  .kpi-value{font-size:34px;font-weight:900;margin-top:8px}
+  .kpi-sub{opacity:.7;margin-top:6px;font-size:13px}
+  .twocol{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}
+  @media (max-width:1100px){.twocol{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.7}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Dashboard comercial</h1>
+      <div class="sub">Métricas de respuesta, descarte y reactivación.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/followups">Vista tabla</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups/agenda">Agenda</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups/kanban">Kanban</a>
+    </div>
+  </div>
+
+  <div class="gridkpi">
+    <div class="cardx">
+      <div class="kpi-title">Total seguimientos</div>
+      <div class="kpi-value">{{ total }}</div>
+    </div>
+    <div class="cardx">
+      <div class="kpi-title">Tasa de respuesta</div>
+      <div class="kpi-value">{{ tasa_respuesta }}%</div>
+      <div class="kpi-sub">Respondidos + reactivados + descartados sobre el total.</div>
+    </div>
+    <div class="cardx">
+      <div class="kpi-title">Tasa de reactivación</div>
+      <div class="kpi-value">{{ tasa_reactivacion }}%</div>
+      <div class="kpi-sub">Reactivados sobre el total.</div>
+    </div>
+    <div class="cardx">
+      <div class="kpi-title">Conversión sobre respondidos</div>
+      <div class="kpi-value">{{ tasa_conversion_sobre_respondidos }}%</div>
+      <div class="kpi-sub">Reactivados sobre todos los que respondieron.</div>
+    </div>
+  </div>
+
+  <div class="gridkpi">
+    <div class="cardx">
+      <div class="kpi-title">Pendientes</div>
+      <div class="kpi-value">{{ pendientes }}</div>
+    </div>
+    <div class="cardx">
+      <div class="kpi-title">Contactados</div>
+      <div class="kpi-value">{{ contactados }}</div>
+    </div>
+    <div class="cardx">
+      <div class="kpi-title">Respondidos</div>
+      <div class="kpi-value">{{ respondidos }}</div>
+    </div>
+    <div class="cardx">
+      <div class="kpi-title">Reactivados / Descartados</div>
+      <div class="kpi-value">{{ reactivados }} / {{ descartados }}</div>
+    </div>
+  </div>
+
+  <div class="twocol">
+    <div class="cardx">
+      <h3 style="margin-top:0">Desempeño por tipo</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Total</th>
+            <th>Respondidos</th>
+            <th>Reactivados</th>
+            <th>Descartados</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for kind, row in by_kind.items() %}
+          <tr>
+            <td>{{ kind }}</td>
+            <td>{{ row.total }}</td>
+            <td>{{ row.respondidos }}</td>
+            <td>{{ row.reactivados }}</td>
+            <td>{{ row.descartados }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cardx">
+      <h3 style="margin-top:0">Últimos reactivados</h3>
+      <div class="list">
+        {% for row in recent_reactivated %}
+        <div class="item">
+          <div><strong>{{ row.student.full_name if row.student else "-" }}</strong></div>
+          <div class="meta">{{ row.kind.value }} · {{ row.title or "-" }}</div>
+          <div class="meta">{{ row.result_summary or "-" }}</div>
+        </div>
+        {% else %}
+        <div class="item">Sin reactivados recientes.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="twocol">
+    <div class="cardx">
+      <h3 style="margin-top:0">Últimos descartados</h3>
+      <div class="list">
+        {% for row in recent_negative %}
+        <div class="item">
+          <div><strong>{{ row.student.full_name if row.student else "-" }}</strong></div>
+          <div class="meta">{{ row.kind.value }} · {{ row.title or "-" }}</div>
+          <div class="meta">{{ row.result_summary or "-" }}</div>
+        </div>
+        {% else %}
+        <div class="item">Sin descartados recientes.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="cardx">
+      <h3 style="margin-top:0">Acceso rápido</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn btn-outline-secondary" href="/admin/followups">Seguimientos</a>
+        <a class="btn btn-outline-secondary" href="/admin/followups/agenda">Agenda</a>
+        <a class="btn btn-outline-secondary" href="/admin/followups/kanban">Kanban</a>
+        <a class="btn btn-outline-secondary" href="/admin/followups/reminders">Recordatorios</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

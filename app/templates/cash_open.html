@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:720px;margin:0 auto;padding:18px}
+  .card2{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;overflow:hidden}
+  .body{padding:20px}
+  .foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:10px}
+  .ttl{font-size:34px;font-weight:900;margin:0}
+  .sub{opacity:.74;margin-top:6px}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.78;margin:0 0 8px}
+  .inp,.ta{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .ta{min-height:100px;resize:vertical}
+</style>
+
+<div class="wrap">
+  <div style="margin-bottom:18px">
+    <h1 class="ttl">Abrir caja</h1>
+    <div class="sub">Iniciá una nueva jornada o turno con monto inicial.</div>
+  </div>
+
+  {% if open_session %}
+    <div class="alert alert-warning">Ya hay una caja abierta. No se puede abrir otra hasta cerrar la actual.</div>
+  {% endif %}
+
+  <form method="post" action="/admin/caja/open">
+    <div class="card2">
+      <div class="body">
+        <div class="mb-3">
+          <label class="lbl">Monto inicial</label>
+          <input class="inp" type="number" step="0.01" min="0" name="opening_amount" required placeholder="Ej: 25000">
+        </div>
+
+        <div>
+          <label class="lbl">Observaciones</label>
+          <textarea class="ta" name="description" placeholder="Observación opcional de apertura..."></textarea>
+        </div>
+      </div>
+
+      <div class="foot">
+        <a class="btn btn-outline-secondary" href="/admin/caja">Volver</a>
+        <button class="btn btn-primary" type="submit" {% if open_session %}disabled{% endif %}>Abrir caja</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

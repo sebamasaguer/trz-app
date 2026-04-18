@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .page-wrap{max-width:1420px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:40px;font-weight:900;margin:0}
+  .hero .sub{opacity:.75;margin-top:6px}
+  .filters,.totals,.sessions,.movements-box{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px}
+  .filters .body,.totals .body,.sessions .body,.movements-box .body{padding:18px}
+  .grid6{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:12px;align-items:end}
+  @media (max-width: 1200px){.grid6{grid-template-columns:1fr 1fr 1fr}}
+  @media (max-width: 700px){.grid6{grid-template-columns:1fr}}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.78;margin:0 0 8px}
+  .inp,.sel{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media (max-width: 900px){.grid3{grid-template-columns:1fr}}
+  .kpi{padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.03)}
+  .kpi .t{opacity:.72}
+  .kpi .v{font-size:2rem;font-weight:900;margin-top:6px}
+  .table-wrap{margin-top:14px;border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:auto}
+  table{width:100%;min-width:1150px;border-collapse:collapse}
+  thead th{padding:14px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;color:rgba(255,255,255,.72)}
+  tbody td{padding:14px;border-bottom:1px solid rgba(255,255,255,.06)}
+</style>
+
+<div class="page-wrap">
+  <div class="hero">
+    <div>
+      <h1>Reporte de caja</h1>
+      <div class="sub">Consultá movimientos por rango de fechas y revisá aperturas/cierres.</div>
+    </div>
+    <a class="btn btn-outline-secondary" href="/admin/caja">Volver</a>
+  </div>
+
+  <div class="filters">
+    <div class="body">
+      <form method="get" action="/admin/caja/report" class="grid6">
+        <div>
+          <label class="lbl">Fecha desde</label>
+          <input class="inp" type="date" name="date_from" value="{{ date_from }}">
+        </div>
+
+        <div>
+          <label class="lbl">Fecha hasta</label>
+          <input class="inp" type="date" name="date_to" value="{{ date_to }}">
+        </div>
+
+        <div>
+          <label class="lbl">Tipo</label>
+          <select class="sel" name="entry_type">
+            <option value="">Todos</option>
+            {% for mt in entry_type %}
+              <option value="{{ mt.value }}" {% if entry_type == mt.value %}selected{% endif %}>{{ mt.value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="lbl">Método</label>
+          <select class="sel" name="payment_method">
+            <option value="">Todos</option>
+            {% for pm in payment_methods %}
+              <option value="{{ pm.value }}" {% if payment_method == pm.value %}selected{% endif %}>{{ pm.value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="lbl">Categoría</label>
+          <select class="sel" name="category">
+            <option value="">Todas</option>
+            <option value="MEMBRESIA" {% if category == 'MEMBRESIA' %}selected{% endif %}>MEMBRESIA</option>
+            {% for ec in expense_categories %}
+              <option value="{{ ec.value }}" {% if category == ec.value %}selected{% endif %}>{{ ec.value }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <button class="btn btn-primary w-100" type="submit">Buscar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="totals mt-3">
+    <div class="body">
+      <div class="grid3">
+        <div class="kpi">
+          <div class="t">Ingresos</div>
+          <div class="v">${{ '%.2f'|format(total_income) }}</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Egresos</div>
+          <div class="v">${{ '%.2f'|format(total_expense) }}</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Saldo neto</div>
+          <div class="v">${{ '%.2f'|format(net_total) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="movements-box mt-3">
+    <div class="body">
+      <h5 style="font-weight:900;margin-bottom:8px">Movimientos</h5>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Sesión</th>
+              <th>Tipo</th>
+              <th>Alumno</th>
+              <th>Concepto</th>
+              <th>Categoría</th>
+              <th>Importe</th>
+              <th>Método</th>
+              <th>Estado</th>
+              <th>Usuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in movements %}
+            <tr>
+              <td>{{ m.movement_date.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td>#{{ m.session_id }}</td>
+              <td>
+                {% if m.entry_type.value == "INGRESO" %}
+                    <span class="tag ok">INGRESO</span>
+                {% else %}
+                    <span class="tag bad">EGRESO</span>
+                {% endif %}
+                </td>
+              <td>{{ m.student.full_name if m.student else '-' }}</td>
+              <td>{{ m.concept }}</td>
+              <td>{{ m.category }}</td>
+              <td>${{ '%.2f'|format(m.amount|float) }}</td>
+              <td>{{ m.payment_method.value if m.payment_method else '-' }}</td>
+              <td>{{ m.status.value }}</td>
+              <td>{{ m.created_by.full_name if m.created_by else '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="10">No hay movimientos en ese rango.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="sessions mt-3">
+    <div class="body">
+      <h5 style="font-weight:900;margin-bottom:8px">Aperturas y cierres</h5>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Estado</th>
+              <th>Apertura</th>
+              <th>Cierre</th>
+              <th>Abrió</th>
+              <th>Cerró</th>
+              <th>Inicial</th>
+              <th>Ingresos</th>
+              <th>Egresos</th>
+              <th>Teórico</th>
+              <th>Real</th>
+              <th>Diferencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in sessions %}
+            <tr>
+              <td>#{{ s.id }}</td>
+              <td>{{ s.status.value }}</td>
+              <td>{{ s.opened_at.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td>{% if s.closed_at %}{{ s.closed_at.strftime('%d/%m/%Y %H:%M') }}{% else %}-{% endif %}</td>
+              <td>{{ s.opened_by.full_name if s.opened_by else '-' }}</td>
+              <td>{{ s.closed_by.full_name if s.closed_by else '-' }}</td>
+              <td>${{ '%.2f'|format(s.opening_amount|float) }}</td>
+              <td>${{ '%.2f'|format(s.total_income|float) }}</td>
+              <td>${{ '%.2f'|format(s.total_expense|float) }}</td>
+              <td>${{ '%.2f'|format(s.expected_closing_amount|float) }}</td>
+              <td>{% if s.real_closing_amount is not none %}${{ '%.2f'|format(s.real_closing_amount|float) }}{% else %}-{% endif %}</td>
+              <td>{% if s.difference_amount is not none %}${{ '%.2f'|format(s.difference_amount|float) }}{% else %}-{% endif %}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="12">No hay sesiones en ese rango.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

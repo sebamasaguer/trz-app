@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: gym-postgres
+    environment:
+      POSTGRES_DB: gym_db
+      POSTGRES_USER: gym_user
+      POSTGRES_PASSWORD: GymPass123!
+    ports:
+      - "5434:5432"
+    volumes:
+      - gym_pgdata:/var/lib/postgresql/data
+
+volumes:
+  gym_pgdata:

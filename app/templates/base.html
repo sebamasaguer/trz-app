@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TRZ FUNCIONAL</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    :root{
+      --trz-magenta: #B54F99;
+      --trz-magenta-dark: #A0448D;
+      --trz-plum: #5D2853;
+      --trz-steel: #637680;
+      --trz-charcoal: #1F2328;
+      --trz-bg: #F6F7F9;
+
+      --trz-surface: rgba(255,255,255,.04);
+      --trz-surface-2: rgba(255,255,255,.06);
+      --trz-border: rgba(255,255,255,.10);
+      --trz-text: #f1f3f5;
+      --trz-muted: rgba(255,255,255,.65);
+    }
+
+    body{
+      background: var(--trz-charcoal) !important;
+      color: var(--trz-text) !important;
+    }
+
+    a{ color: var(--trz-magenta); }
+    a:hover{ color: var(--trz-magenta-dark); }
+
+    .navbar{
+      background: var(--trz-charcoal) !important;
+      border-bottom: 2px solid var(--trz-magenta);
+      min-height: 78px;
+    }
+
+    .navbar .container{
+      max-width: 1400px;
+    }
+
+    .navbar-brand{
+      font-weight: 900;
+      letter-spacing: .4px;
+      font-size: 1.15rem;
+      color: #fff !important;
+    }
+
+    .navbar .nav-link{
+      color: rgba(255,255,255,.82) !important;
+      font-weight: 500;
+      padding: .85rem 1rem !important;
+      transition: .15s ease;
+      border-radius: 10px;
+    }
+
+    .navbar .nav-link:hover,
+    .navbar .nav-link:focus,
+    .navbar .nav-link.active{
+      color: #fff !important;
+      background: rgba(181,79,153,.10);
+    }
+
+    .navbar .navbar-text{
+      color: rgba(255,255,255,.75) !important;
+    }
+
+    .dropdown-menu{
+      background: #252a31 !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      border-radius: 14px !important;
+      padding: .45rem !important;
+      box-shadow: 0 18px 32px rgba(0,0,0,.28);
+      margin-top: .45rem !important;
+    }
+
+    .dropdown-item{
+      color: rgba(255,255,255,.88) !important;
+      border-radius: 10px !important;
+      padding: .7rem .9rem !important;
+      transition: .15s ease;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item:focus,
+    .dropdown-item.active{
+      background: rgba(181,79,153,.14) !important;
+      color: #fff !important;
+    }
+
+    .dropdown-divider{
+      border-top-color: rgba(255,255,255,.08) !important;
+    }
+
+    .user-pill{
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      color: rgba(255,255,255,.88);
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: .55rem .8rem;
+    }
+
+    .user-pill .mail{
+      font-weight: 700;
+      line-height: 1.1;
+      color: #fff;
+    }
+
+    .user-pill .role{
+      font-size: .82rem;
+      color: rgba(255,255,255,.65);
+      line-height: 1.1;
+    }
+
+    .btn{
+      border-radius: 10px !important;
+      font-weight: 700;
+    }
+
+    .btn-primary{
+      background: var(--trz-magenta) !important;
+      border-color: var(--trz-magenta) !important;
+      color: #fff !important;
+    }
+    .btn-primary:hover{
+      background: var(--trz-magenta-dark) !important;
+      border-color: var(--trz-magenta-dark) !important;
+    }
+
+    .btn-success{
+      background: var(--trz-magenta) !important;
+      border-color: var(--trz-magenta) !important;
+      color: #fff !important;
+    }
+    .btn-success:hover{
+      background: var(--trz-magenta-dark) !important;
+      border-color: var(--trz-magenta-dark) !important;
+    }
+
+    .btn-outline-primary,
+    .btn-outline-secondary,
+    .btn-outline-warning,
+    .btn-outline-info{
+      color: var(--trz-magenta) !important;
+      border-color: rgba(181,79,153,.65) !important;
+      background: transparent !important;
+    }
+    .btn-outline-primary:hover,
+    .btn-outline-secondary:hover,
+    .btn-outline-warning:hover,
+    .btn-outline-info:hover{
+      background: rgba(181,79,153,.12) !important;
+      border-color: var(--trz-magenta) !important;
+      color: #fff !important;
+    }
+
+    .btn-danger,
+    .btn-outline-danger{
+      border-color: rgba(198,40,40,.75) !important;
+      color: #ffdddd !important;
+      background: transparent !important;
+    }
+    .btn-danger:hover,
+    .btn-outline-danger:hover{
+      background: rgba(198,40,40,.18) !important;
+      border-color: rgba(198,40,40,1) !important;
+      color: #fff !important;
+    }
+
+    .btn-outline-light{
+      border-radius: 12px !important;
+    }
+
+    .card{
+      background: var(--trz-surface) !important;
+      border: 1px solid var(--trz-border) !important;
+      color: var(--trz-text) !important;
+      border-radius: 14px !important;
+    }
+
+    .btn-icon{
+      width: 38px;
+      height: 34px;
+      padding: 0 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px !important;
+    }
+
+    .btn-icon i{
+      font-size: 1.05rem;
+      line-height: 1;
+    }
+
+    .actions{
+      display: flex;
+      gap: .4rem;
+      flex-wrap: nowrap;
+    }
+
+    .form-label{
+      color: rgba(255,255,255,.85) !important;
+    }
+
+    .form-control,
+    .form-select{
+      background: var(--trz-surface-2) !important;
+      border: 1px solid var(--trz-border) !important;
+      color: var(--trz-text) !important;
+      border-radius: 12px !important;
+    }
+
+    .form-control::placeholder{
+      color: rgba(255,255,255,.45) !important;
+    }
+
+    .form-select option{
+      color: #111;
+    }
+
+    .form-control:focus,
+    .form-select:focus{
+      border-color: var(--trz-magenta) !important;
+      box-shadow: 0 0 0 .2rem rgba(181,79,153,.18) !important;
+    }
+
+    .text-muted{
+      color: var(--trz-muted) !important;
+    }
+
+    .badge{
+      border-radius: 999px !important;
+      padding: .35rem .6rem !important;
+      font-weight: 800 !important;
+      letter-spacing: .2px;
+    }
+
+    .badge.bg-secondary,
+    .badge.role-badge{
+      background: rgba(93,40,83,.90) !important;
+      color: #fff !important;
+    }
+
+    .badge.bg-success{
+      background: rgba(31,138,76,.85) !important;
+    }
+
+    .badge.bg-danger{
+      background: rgba(198,40,40,.85) !important;
+    }
+
+    .table{
+      color: var(--trz-text) !important;
+    }
+
+    .table-responsive{
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      overflow: hidden;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-responsive .table{
+      margin-bottom: 0 !important;
+      background: rgba(255,255,255,.04) !important;
+    }
+
+    .table-responsive .table,
+    .table-responsive .table *{
+      color: #f1f3f5 !important;
+    }
+
+    .table-responsive .table thead th{
+      background: #1F2328 !important;
+      color: #f1f3f5 !important;
+      border-color: rgba(255,255,255,.10) !important;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .table-responsive .table tbody tr,
+    .table-responsive .table tbody tr > td,
+    .table-responsive .table tbody tr > th{
+      background: rgba(255,255,255,.04) !important;
+      border-color: rgba(255,255,255,.08) !important;
+      vertical-align: middle;
+    }
+
+    .table-responsive .table.table-striped tbody tr:nth-of-type(odd),
+    .table-responsive .table.table-striped tbody tr:nth-of-type(odd) > td,
+    .table-responsive .table.table-striped tbody tr:nth-of-type(odd) > th{
+      background: rgba(255,255,255,.06) !important;
+    }
+
+    .table-responsive .table.table-hover tbody tr:hover,
+    .table-responsive .table.table-hover tbody tr:hover > td,
+    .table-responsive .table.table-hover tbody tr:hover > th{
+      background: rgba(181,79,153,.12) !important;
+    }
+
+    .table-responsive table{
+      min-width: 1200px;
+    }
+
+    .table td,
+    .table th{
+      white-space: nowrap;
+    }
+
+    .table td:nth-child(2){
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .table td:last-child,
+    .table th:last-child{
+      white-space: nowrap;
+    }
+
+    main.container{
+      max-width: 1400px;
+    }
+
+    @media (max-width: 991.98px){
+      .navbar .nav-link{
+        padding: .7rem .85rem !important;
+      }
+
+      .user-pill{
+        width: 100%;
+        justify-content: space-between;
+        margin-top: .75rem;
+      }
+
+      .nav-actions-mobile{
+        width: 100%;
+        margin-top: .75rem;
+      }
+
+      .nav-actions-mobile form,
+      .nav-actions-mobile button{
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-dark text-light">
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+    {% if me and me.role.value in ["ADMINISTRADOR","ADMINISTRATIVO"] %}
+      <a class="navbar-brand" href="/admin/home">TRZ FUNCIONAL</a>
+    {% elif me and me.role.value == "PROFESOR" %}
+      <a class="navbar-brand" href="/profesor/routines">TRZ FUNCIONAL</a>
+    {% elif me and me.role.value == "ALUMNO" %}
+      <a class="navbar-brand" href="/alumno/rutina">TRZ FUNCIONAL</a>
+    {% else %}
+      <a class="navbar-brand" href="/">TRZ FUNCIONAL</a>
+    {% endif %}
+
+      {% if me %}
+        {% set path = request.url.path %}
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navMain"
+          aria-controls="navMain"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMain">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+            {% if me.role.value in ["ADMINISTRADOR","ADMINISTRATIVO"] %}
+            <li class="nav-item">
+              <a class="nav-link {% if path == '/admin/home' %}active{% endif %}" href="/admin/home">
+                Inicio
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+            <a
+              class="nav-link dropdown-toggle {% if path.startswith('/admin/followups') %}active{% endif %}"
+              href="#"
+              id="navFollowups"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              Seguimiento
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navFollowups">
+              <li><a class="dropdown-item" href="/admin/followups/dashboard">Dashboard comercial</a></li>
+              <li></li><a class="dropdown-item" href="/admin/followups/automation">Automatizaciones</a></li>
+              <li></li><a class="dropdown-item" href="/admin/followups/inbox">Bandeja de respuestas</a></li>
+              <div class="dropdown-divider"></div>
+              <li><a class="dropdown-item" href="/admin/followups">Vista tabla</a></li>
+              <li><a class="dropdown-item" href="/admin/followups/agenda">Agenda</a></li>
+              <li><a class="dropdown-item" href="/admin/followups/kanban">Kanban</a></li>
+              <li><a class="dropdown-item" href="/admin/followups/reminders">Recordatorios</a></li>
+              <li><a class="dropdown-item" href="/admin/templates">Plantillas</a></li>
+              <li><a class="dropdown-item" href="/admin/conversations">Conversaciones IA</a></li>
+            </ul>
+          </li>
+            <li class="nav-item">
+              <a class="nav-link {% if path.startswith('/admin/users') %}active{% endif %}" href="/admin/users">
+                Usuarios
+              </a>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle {% if path == '/admin/memberships' or path == '/admin/memberships/assign' or path == '/admin/memberships/report' %}active{% endif %}"
+                href="#"
+                id="navMemberships"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Membresías
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navMemberships">
+                <li>
+                  <a class="dropdown-item {% if path == '/admin/memberships' %}active{% endif %}" href="/admin/memberships">
+                    Ver membresías
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item {% if path == '/admin/memberships/assign' %}active{% endif %}" href="/admin/memberships/assign">
+                    Asignar membresía
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item {% if path == '/admin/memberships/report' %}active{% endif %}" href="/admin/memberships/report">
+                    Reporte cupos
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link {% if path == '/admin/memberships/consume' %}active{% endif %}" href="/admin/memberships/consume">
+                Asistencia
+              </a>
+            </li>
+            <li class="nav-item"></li>
+              <a class="dropdown-item" href="/admin/classes">Clases y grupos</a>
+              <a class="dropdown-item" href="/admin/classes/enrollments">Inscripciones a clases</a>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle {% if path.startswith('/admin/qr') %}active{% endif %}"
+                href="#"
+                id="navQr"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                QR
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navQr">
+                <li>
+                  <a class="dropdown-item {% if path == '/admin/qr' and request.query_params.get('service') == 'FUNCIONAL' %}active{% endif %}" href="/admin/qr?service=FUNCIONAL">
+                    QR Funcional
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item {% if path == '/admin/qr' and request.query_params.get('service') == 'MUSCULACION' %}active{% endif %}" href="/admin/qr?service=MUSCULACION">
+                    QR Musculación
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle {% if path.startswith('/admin/caja') %}active{% endif %}"
+                href="#"
+                id="navCaja"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Caja
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navCaja">
+                <li><a class="dropdown-item {% if path == '/admin/caja' %}active{% endif %}" href="/admin/caja">Panel de caja</a></li>
+                <li><a class="dropdown-item {% if path == '/admin/caja/open' %}active{% endif %}" href="/admin/caja/open">Abrir caja</a></li>
+                <li><a class="dropdown-item {% if path == '/admin/caja/expense/new' %}active{% endif %}" href="/admin/caja/expense/new">Nuevo egreso</a></li>
+                <li><a class="dropdown-item {% if path == '/admin/caja/close' %}active{% endif %}" href="/admin/caja/close">Cerrar caja</a></li>
+                <li><a class="dropdown-item {% if path == '/admin/caja/report' %}active{% endif %}" href="/admin/caja/report">Reporte</a></li>
+              </ul>
+            </li>
+          {% endif %}
+
+            {% if me.role.value == "PROFESOR" %}
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle {% if path.startswith('/profesor/') %}active{% endif %}"
+                  href="#"
+                  id="navProfesor"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Profesor
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navProfesor">
+                  <li>
+                    <a class="dropdown-item {% if path == '/profesor/exercises' %}active{% endif %}" href="/profesor/exercises">
+                      Ejercicios
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item {% if path == '/profesor/routines' %}active{% endif %}" href="/profesor/routines">
+                      Rutinas
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item {% if path == '/profesor/assignments' %}active{% endif %}" href="/profesor/assignments">
+                      Asignaciones
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item {% if path == '/profesor/alumnos' %}active{% endif %}" href="/profesor/alumnos">
+                      Mis alumnos
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            {% endif %}
+
+            {% if me.role.value == "ALUMNO" %}
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px">
+                <a class="btn btn-outline-secondary" href="/alumno/rutina">Mi rutina</a>
+                <a class="btn btn-outline-secondary" href="/alumno/membresia">Detalle membresía</a>
+                <a class="btn btn-outline-secondary" href="/admin/classes/enrollments">Mis clases</a>
+              </div>
+            {% endif %}
+
+          </ul>
+
+          <div class="d-flex flex-column flex-lg-row gap-2 align-items-stretch align-items-lg-center nav-actions-mobile">
+            <div class="user-pill">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-person-fill"></i>
+                <div>
+                  <div class="mail">{{ me.email }}</div>
+                  <div class="role">{{ me.role.value }}</div>
+                </div>
+              </div>
+            </div>
+
+            <form method="post" action="/logout" class="m-0">
+              <button class="btn btn-outline-light btn-sm" type="submit">Salir</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div></div>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
+    });
+  </script>
+</body>
+</html>

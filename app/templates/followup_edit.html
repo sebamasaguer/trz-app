@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:980px;margin:0 auto;padding:18px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .hero{margin-bottom:18px}
+  .hero h1{font-size:34px;font-weight:900;margin:0}
+  .hero .sub{opacity:.74;margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width: 760px){.grid2{grid-template-columns:1fr}}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.72;margin:0 0 8px}
+  .inp,.sel,.ta{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .ta{min-height:120px;resize:vertical}
+  .preview{white-space:pre-wrap;line-height:1.5}
+  .helper{font-size:13px;opacity:.72;margin-top:6px}
+  .mini-card{
+    margin-top:18px;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.03);
+    border-radius:16px;
+    padding:14px;
+  }
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+    font-size:12px;
+    font-weight:700;
+  }
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Editar seguimiento</h1>
+    <div class="sub">{{ student.full_name or student.email }}</div>
+  </div>
+
+  <form method="post" action="/admin/followups/{{ row.id }}/edit">
+    <div class="cardx">
+      <div class="grid2">
+        <div>
+          <label class="lbl">Tipo</label>
+          <select class="sel" name="kind">
+            {% for k in kinds %}
+              <option value="{{ k }}" {% if row.kind.value == k %}selected{% endif %}>{{ k }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="lbl">Estado</label>
+          <select class="sel" name="status">
+            {% for s in statuses %}
+              <option value="{{ s }}" {% if row.status.value == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:16px">
+        <div>
+          <label class="lbl">Prioridad</label>
+          <select class="sel" name="priority">
+            <option value="">Automática</option>
+            {% for p in priorities %}
+              <option value="{{ p }}" {% if row.priority.value == p %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="lbl">Canal</label>
+          <select class="sel" name="channel">
+            {% for c in channels %}
+              <option value="{{ c }}" {% if row.channel.value == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:16px">
+        <div>
+          <label class="lbl">Próximo contacto</label>
+          <input class="inp" type="date" name="next_contact_date" value="{{ row.next_contact_date.isoformat() if row.next_contact_date else '' }}">
+        </div>
+
+        <div>
+          <label class="lbl">Resultado</label>
+          <input class="inp" type="text" name="result_summary" value="{{ row.result_summary }}">
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <label class="lbl">Título</label>
+        <input class="inp" type="text" name="title" value="{{ row.title }}">
+      </div>
+
+      <div style="margin-top:16px">
+        <label class="lbl">Notas internas</label>
+        <textarea class="ta" name="notes">{{ row.notes }}</textarea>
+      </div>
+
+      <div class="mini-card">
+        <div class="lbl">Variables disponibles en plantillas</div>
+        <div class="chips">
+          <span class="chip">{nombre}</span>
+          <span class="chip">{email}</span>
+          <span class="chip">{telefono}</span>
+          <span class="chip">{titulo}</span>
+          <span class="chip">{resultado}</span>
+          <span class="chip">{proximo_contacto}</span>
+        </div>
+        <div class="helper">Si cambiás la plantilla o el contenido, estas variables se completan automáticamente con los datos del alumno y del seguimiento.</div>
+      </div>
+
+      <div class="cardx" style="margin-top:18px">
+        <div class="lbl">Mensaje sugerido</div>
+        <div class="preview" id="msgPreview">{{ suggested_message }}</div>
+        <div class="helper">Este texto puede enviarse manualmente o ser reutilizado por un flujo automatizado con n8n.</div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+          <a class="btn btn-outline-secondary" target="_blank" href="{{ suggested_whatsapp_url }}">Abrir WhatsApp</a>
+          <a class="btn btn-outline-secondary" href="{{ suggested_email_url }}">Abrir email</a>
+          <button class="btn btn-outline-secondary" type="button" onclick="copySuggestedMessage()">Copiar mensaje</button>
+          <a class="btn btn-outline-secondary" href="/admin/alumnos/{{ student.id }}/followups">Ver historial alumno</a>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap">
+        <a class="btn btn-outline-secondary" href="/admin/followups">Volver</a>
+        <button class="btn btn-primary" type="submit">Guardar cambios</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  function copySuggestedMessage() {
+    const text = document.getElementById("msgPreview")?.innerText || "";
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Mensaje copiado");
+    });
+  }
+</script>
+
+{% endblock %}

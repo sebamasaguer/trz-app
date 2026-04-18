@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1400px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .hero h1{font-size:36px;font-weight:900;margin:0}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .toolbar{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.72;margin:0 0 8px}
+  .sel{width:140px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .item{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;background:rgba(255,255,255,.03)}
+  .meta{opacity:.72;font-size:14px;margin-top:4px}
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+  .pager-info{opacity:.76;font-size:14px}
+  .pager-actions{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Recordatorios automáticos</h1>
+      <div class="sub">Seguimientos con fecha próxima y automatización habilitada.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-outline-secondary" href="/admin/templates">Plantillas</a>
+      <a class="btn btn-outline-secondary" href="/admin/followups">Volver</a>
+    </div>
+  </div>
+
+  <div class="cardx">
+    <form method="get" class="toolbar">
+      <div class="pager-info">
+        Mostrando {{ pagination.from_item }} a {{ pagination.to_item }} de {{ pagination.total }} registros
+      </div>
+      <div>
+        <label class="lbl">Por página</label>
+        <select class="sel" name="page_size" onchange="this.form.submit()">
+          {% for size in [10,25,50,100] %}
+            <option value="{{ size }}" {% if pagination.page_size == size %}selected{% endif %}>{{ size }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+
+    <div class="list">
+      {% for row in rows %}
+      <div class="item">
+        <div><strong>{{ row.student.full_name if row.student else "-" }}</strong></div>
+        <div class="meta">{{ row.kind.value }} · {{ row.status.value }} · {{ row.priority.value }}</div>
+        <div class="meta">Próximo contacto: {{ row.next_contact_date.strftime("%d/%m/%Y") if row.next_contact_date else "-" }}</div>
+        <div class="meta">Último recordatorio: {{ row.reminder_sent_at.strftime("%d/%m/%Y %H:%M") if row.reminder_sent_at else "Nunca" }}</div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <form method="post" action="/admin/followups/{{ row.id }}/mark-reminder" style="margin:0">
+            <button class="btn btn-sm btn-outline-secondary" type="submit">Marcar recordatorio enviado</button>
+          </form>
+          <a class="btn btn-sm btn-outline-secondary" href="/admin/followups/{{ row.id }}/edit">Editar</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="item">No hay seguimientos automáticos para mostrar.</div>
+      {% endfor %}
+    </div>
+
+    <div class="pager">
+      <div class="pager-info">
+        Página {{ pagination.page }} de {{ pagination.total_pages }}
+      </div>
+      <div class="pager-actions">
+        {% if pagination.has_prev %}
+        <a class="btn btn-sm btn-outline-secondary"
+           href="?page_size={{ pagination.page_size }}&page={{ pagination.prev_page }}">
+          Anterior
+        </a>
+        {% endif %}
+        {% if pagination.has_next %}
+        <a class="btn btn-sm btn-outline-secondary"
+           href="?page_size={{ pagination.page_size }}&page={{ pagination.next_page }}">
+          Siguiente
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

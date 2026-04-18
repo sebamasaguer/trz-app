@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h3 class="mb-1">{{ title }}</h3>
+    <div class="text-muted mb-3">{{ subtitle }}</div>
+
+    <div class="alert alert-light border">
+      <div><b>Usuario:</b> {{ me.email }}</div>
+      <div><b>Rol:</b> {{ me.role.value }}</div>
+      <div><b>Nombre:</b> {{ me.first_name }} {{ me.last_name }}</div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      {% if me.role.value in ["ADMINISTRADOR","ADMINISTRATIVO"] %}
+        <a class="btn btn-primary" href="/admin/users">Panel de usuarios</a>
+      {% endif %}
+
+    {% if me.role.value == "PROFESOR" %}
+    <a class="btn btn-primary" href="/profesor/routines">Rutinas</a>
+    <a class="btn btn-outline-primary" href="/profesor/exercises">Ejercicios</a>
+    <a class="btn btn-outline-primary" href="/profesor/assignments">Asignar rutinas</a>
+    <a class="btn btn-outline-primary" href="/profesor/alumnos">Mis alumnos</a>
+    {% endif %}
+
+      {% if me.role.value == "ALUMNO" %}
+        <a class="btn btn-primary" href="/alumno/rutina">Mi rutina activa</a>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

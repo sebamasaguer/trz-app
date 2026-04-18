@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .qr-wrap{ max-width: 720px; margin: 0 auto; }
+  .qr-card{ border-radius: 18px; border: 1px solid rgba(0,0,0,.08); box-shadow: 0 12px 26px rgba(0,0,0,.07); overflow: hidden; }
+  .qr-head{ background: linear-gradient(135deg, rgba(0,0,0,.85), rgba(0,0,0,.65)); color:#fff; padding: 1rem 1.1rem; }
+  .qr-box{ display:flex; justify-content:center; align-items:center; padding: 1.2rem; background:#fff; }
+  .hint{ color: rgba(0,0,0,.65); font-size:.9rem; }
+  .btn-wide{ min-width: 160px; }
+  .payload{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:.85rem; }
+</style>
+
+<div class="qr-wrap py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h3 class="mb-1">QR de ingreso</h3>
+      <div class="text-muted small">Mostralo en recepción / TV. Válido solo para hoy.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary btn-wide" href="/admin/memberships">Volver</a>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 mb-3">
+    <a class="btn btn-primary btn-wide {% if service=='FUNCIONAL' %}disabled{% endif %}" href="/admin/qr?service=FUNCIONAL">FUNCIONAL</a>
+    <a class="btn btn-primary btn-wide {% if service=='MUSCULACION' %}disabled{% endif %}" href="/admin/qr?service=MUSCULACION">MUSCULACIÓN</a>
+  </div>
+
+  <div class="qr-card">
+    <div class="qr-head d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <div style="font-weight:900; font-size:1.1rem;">Servicio: {{ service }}</div>
+        <div style="opacity:.85;">Escanear para dar presente</div>
+      </div>
+      <button class="btn btn-outline-light btn-sm" onclick="window.print()">Imprimir</button>
+    </div>
+
+    <div class="qr-box">
+      <div id="qrcode" data-qr="{{ payload|e }}"></div>
+    </div>
+
+    <div class="p-3">
+      <div class="hint mb-2">Si necesitás soporte, copiá el contenido del QR:</div>
+      <div class="payload p-2 rounded" style="background: rgba(0,0,0,.03); border:1px solid rgba(0,0,0,.08);">
+        {{ payload }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR generator -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+  const el = document.getElementById("qrcode");
+  const qrText = el.dataset.qr;  // string seguro
+
+  new QRCode(el, {
+    text: qrText,
+    width: 320,
+    height: 320
+  });
+</script>
+{% endblock %}

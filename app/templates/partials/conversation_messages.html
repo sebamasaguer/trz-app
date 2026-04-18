@@ -1,0 +1,46 @@
+{% for msg in messages %}
+  {% set cls = 'user' if msg.is_inbound else 'bot' %}
+  {% set sender_label = msg.sender_type.value if msg.sender_type else ('INBOUND' if msg.is_inbound else 'OUTBOUND') %}
+  {% set sender_badge = 'badge-muted' %}
+
+  {% if msg.sender_type and msg.sender_type.value == 'HUMANO' %}
+    {% set cls = 'human' %}
+    {% set sender_badge = 'badge-success' %}
+  {% elif msg.sender_type and msg.sender_type.value == 'SISTEMA' %}
+    {% set cls = 'system' %}
+    {% set sender_badge = 'badge-warn' %}
+  {% elif msg.is_inbound %}
+    {% set cls = 'user' %}
+    {% set sender_badge = 'badge-muted' %}
+  {% else %}
+    {% set cls = 'bot' %}
+    {% set sender_badge = 'badge-info' %}
+  {% endif %}
+
+  <div class="msg {{ cls }}">
+    <div class="msg-head">
+      <div class="msg-head-left">
+        <span class="badge {{ sender_badge }}">{{ sender_label }}</span>
+        {% if msg.intent_detected %}
+          <span class="badge badge-muted">{{ msg.intent_detected }}</span>
+        {% endif %}
+        {% if msg.delivery_status %}
+          <span class="badge badge-muted">{{ msg.delivery_status }}</span>
+        {% endif %}
+      </div>
+      <span>
+        {{ msg.created_at.strftime("%d/%m/%Y %H:%M") if msg.created_at else "" }}
+      </span>
+    </div>
+
+    <div class="msg-text">{{ msg.message_text or "" }}</div>
+
+    <div class="msg-meta">
+      {% if msg.external_ref %}
+        Ref: {{ msg.external_ref }}
+      {% endif %}
+    </div>
+  </div>
+{% else %}
+  <div class="muted">No hay mensajes en esta conversación.</div>
+{% endfor %}

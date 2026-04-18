@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<style>
+  .trz-wrap{max-width:1200px;margin:0 auto;padding:18px;}
+  .head{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
+  .title{margin:0;font-size:22px;font-weight:900}
+  .sub{margin:4px 0 0;opacity:.8}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14)}
+  .card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:16px;padding:14px}
+  .grid-top{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-bottom:12px}
+  @media (max-width: 980px){.grid-top{grid-template-columns:1fr}}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:0 0 6px}
+  .inp,.sel{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.12);color:inherit}
+  .btn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:inherit;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{background:rgba(255,255,255,.12)}
+  .muted{opacity:.75}
+  .table{width:100%;border-collapse:separate;border-spacing:0 10px}
+  .table th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;opacity:.7;text-align:left;padding:0 10px}
+  .tr{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
+  .td{padding:12px 10px;vertical-align:top}
+  .tag{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);margin-right:6px}
+  /* Force dark inside routine detail (avoid any white surfaces) */
+.trz-wrap .card,
+.trz-wrap .card *{
+  color: inherit;
+}
+
+/* Nuestra tabla custom: todo oscuro */
+.trz-wrap table.table{
+  background: transparent !important;
+}
+
+.trz-wrap table.table thead th{
+  color: rgba(255,255,255,.85) !important;
+}
+
+.trz-wrap tr.tr,
+.trz-wrap tr.tr > td.td,
+.trz-wrap tr.tr > th{
+  background: rgba(255,255,255,.05) !important;
+  color: rgba(255,255,255,.92) !important;
+}
+
+.trz-wrap tr.tr:hover,
+.trz-wrap tr.tr:hover > td.td{
+  background: rgba(181,79,153,.10) !important;
+}
+
+/* Si por algún motivo se cuela un blanco (bootstrap/table-striped) */
+.trz-wrap .table-striped tbody tr,
+.trz-wrap .table-striped tbody tr > td,
+.trz-wrap .table-striped tbody tr > th,
+.trz-wrap .table-hover tbody tr,
+.trz-wrap .table-hover tbody tr > td,
+.trz-wrap .table-hover tbody tr > th{
+  background: rgba(255,255,255,.05) !important;
+  color: rgba(255,255,255,.92) !important;
+}
+
+/* Tags (chips) un poco más dark pro */
+.trz-wrap .tag{
+  background: rgba(255,255,255,.06) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+/* Opcional: si el blanco viene de algún elemento inline con bg blanco */
+.trz-wrap [style*="background: #fff"],
+.trz-wrap [style*="background:#fff"],
+.trz-wrap [style*="background: white"],
+.trz-wrap [style*="background:white"]{
+  background: rgba(255,255,255,.05) !important;
+}
+
+/* Mejorar el dropdown nativo donde el navegador lo permite */
+.sel{
+  color-scheme: dark;             /* ayuda en navegadores modernos */
+  background-color: rgba(0,0,0,.12);
+}
+
+/* En algunos navegadores esto sí aplica al popup */
+.sel option{
+  background: #1F2328;
+  color: #f1f3f5;
+}
+.sel optgroup{
+  background: #1F2328;
+  color: #f1f3f5;
+}
+</style>
+
+<div class="trz-wrap">
+  <div class="head">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <h1 class="title">{{ routine.title }}</h1>
+        <span class="pill">{{ routine.routine_type.value }}</span>
+      </div>
+      <p class="sub">{{ routine.notes or "Sin notas" }}</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn" href="/profesor/routines">↩️ Rutinas</a>
+      <a class="btn" href="/profesor/exercises">🏋️ Ejercicios</a>
+    </div>
+  </div>
+
+  <!-- ✅ ARRIBA: Agregar ejercicio (izq) + Asignar a alumno (der) -->
+  <div class="grid-top">
+    <div class="card">
+      <div style="font-weight:900;margin-bottom:8px">Agregar ejercicio</div>
+
+      <form method="post" action="/profesor/routines/{{ routine.id }}/items/add">
+
+        <div style="margin-bottom:10px">
+          <div class="lbl">Ejercicio</div>
+          <select class="sel" name="exercise_id" required>
+            {% for e in exercises %}
+              <option value="{{ e.id }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+          {% if exercises|length == 0 %}
+            <div class="muted" style="margin-top:8px">No tenés ejercicios. Crealos primero.</div>
+          {% endif %}
+        </div>
+
+        {% if routine.routine_type.value == "SEMANAS" %}
+          <div style="margin-bottom:10px">
+            <div class="lbl">Semana (Ej: Semana 1)</div>
+            <input class="inp" name="day_label" placeholder="Semana 1" />
+          </div>
+
+          <div style="margin-bottom:10px">
+            <div class="lbl">Día</div>
+            <select class="sel" name="weekday" required>
+              <option value="">Seleccionar...</option>
+              {% for i in range(1, 8) %}
+                <option value="Día {{ i }}">Día {{ i }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% else %}
+          <div style="margin-bottom:10px">
+            <div class="lbl">Día</div>
+            <select class="sel" name="weekday" required>
+              <option value="">Seleccionar...</option>
+              {% for i in range(1, 8) %}
+                <option value="Día {{ i }}">Día {{ i }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div class="lbl">Series</div>
+            <input class="inp" type="number" name="sets" value="0" min="0" />
+          </div>
+          <div>
+            <div class="lbl">Reps</div>
+            <input class="inp" name="reps" placeholder="8-10" />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div style="margin-bottom:10px">
+            <div class="lbl">Descanso (seg)</div>
+            <input class="inp" type="number" name="rest_seconds" value="0" min="0" />
+          </div>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <div class="lbl">Notas</div>
+          <input class="inp" name="notes" placeholder="Técnica, tempo, RPE..." />
+        </div>
+
+        <button class="btn" type="submit">➕ Agregar</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:900;margin-bottom:8px">Asignar a alumno</div>
+      <form method="post" action="/profesor/routines/{{ routine.id }}/assign">
+        <div style="margin-bottom:10px">
+          <div class="lbl">Alumno</div>
+          <select class="sel" name="student_id" required>
+            {% for s in students %}
+              <option value="{{ s.id }}">{{ s.last_name }} {{ s.first_name }}{% if s.dni %} (DNI {{ s.dni }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <div class="lbl">Fecha inicio (opcional)</div>
+          <input class="inp" type="date" name="start_date" />
+        </div>
+
+        <div class="muted" style="font-size:12px;margin-bottom:10px">
+          Si el alumno ya tiene una rutina activa, se desactiva automáticamente y se asigna esta.
+        </div>
+
+        <button class="btn" type="submit">✅ Asignar rutina</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✅ ABAJO: Ejercicios de la rutina -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="font-weight:900">Ejercicios de la rutina</div>
+      <div class="muted" style="font-size:12px">El orden se asigna automáticamente al agregar cada ejercicio.</div>
+    </div>
+
+    <table class="table" style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Bloque</th>
+          <th>Ejercicio</th>
+          <th>Series / Reps</th>
+          <th>Descanso</th>
+          <th>Orden</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+          <tr class="tr">
+            <td class="td">
+              {% if routine.routine_type.value == "SEMANAS" %}
+                <span class="tag">{{ it.day_label or "Semana" }}</span>
+                {% if it.weekday %}
+                  <span class="tag">{{ it.weekday }}</span>
+                {% else %}
+                  <span class="tag muted">Sin día</span>
+                {% endif %}
+              {% else %}
+                <span class="tag">{{ it.weekday or it.day_label or "—" }}</span>
+              {% endif %}
+            </td>
+
+            <td class="td">
+              <div style="font-weight:900">{{ it.exercise.name }}</div>
+              <div class="muted" style="font-size:12px">
+                {{ it.exercise.muscle_group or "" }}{% if it.exercise.muscle_group and it.exercise.equipment %} · {% endif %}{{ it.exercise.equipment or "" }}
+              </div>
+            </td>
+
+            <td class="td">
+              <span class="tag">{{ it.sets }} series</span>
+              <span class="tag">{{ it.reps or "reps" }}</span>
+            </td>
+
+            <td class="td">
+              <span class="tag">{{ it.rest_seconds }}s</span>
+            </td>
+
+            <td class="td">
+              <span class="tag">{{ it.order_index }}</span>
+            </td>
+
+            <td class="td">
+              <div class="muted">{{ it.notes or "—" }}</div>
+
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+                <a class="btn" href="/profesor/routines/{{ routine.id }}/items/{{ it.id }}/edit">✏️ Editar</a>
+
+                <form method="post"
+                      action="/profesor/routines/{{ routine.id }}/items/{{ it.id }}/delete"
+                      onsubmit="return confirm('¿Eliminar este ejercicio de la rutina?');"
+                      style="display:inline">
+                  <button class="btn" type="submit">🗑️ Eliminar</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="td muted">Todavía no agregaste ejercicios a esta rutina.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% endblock %}

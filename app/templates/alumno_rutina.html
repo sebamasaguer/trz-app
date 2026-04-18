@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* Mejor lectura y aspecto profesional */
+  .page-title{ font-size: 1.6rem; font-weight: 800; letter-spacing: .2px; }
+  .subtle{ color: rgba(255,255,255,.7); }
+  .muted{ color: rgba(0,0,0,.55); }
+  .kpi{
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(0,0,0,.20);
+    padding: .65rem .85rem;
+  }
+  .kpi .lbl{ font-size:.78rem; opacity:.8; }
+  .kpi .val{ font-weight:700; }
+  .routine-card{
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,.07);
+    box-shadow: 0 10px 22px rgba(0,0,0,.06);
+    overflow: hidden;
+  }
+  .routine-head{
+    background: linear-gradient(135deg, rgba(0,0,0,.85), rgba(0,0,0,.65));
+    color: #fff;
+    padding: 1rem 1.1rem;
+  }
+  .badge-pill{
+    border-radius: 999px;
+    padding: .35rem .6rem;
+    font-weight: 700;
+  }
+  .ex-card{
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 14px;
+    padding: .85rem;
+    background: #fff;
+  }
+  .ex-title{ font-weight: 800; margin:0; }
+  .ex-meta{ font-size: .86rem; color: rgba(0,0,0,.65); }
+  .ex-kpis{
+    display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.55rem;
+  }
+  .chip{
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 999px;
+    padding: .25rem .55rem;
+    font-size: .82rem;
+    background: rgba(0,0,0,.02);
+    font-weight: 700;
+  }
+  .chip strong{ font-weight: 900; }
+  .ex-notes{
+    margin-top:.55rem;
+    font-size:.9rem;
+    color: rgba(0,0,0,.75);
+    padding: .55rem .65rem;
+    border-left: 3px solid var(--trz-accent, #ff4da6);
+    background: rgba(255, 77, 166, .06);
+    border-radius: 10px;
+  }
+  .accordion-button{ font-weight:800; }
+</style>
+
+<div class="container py-3">
+
+  <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+    <div>
+      <div class="page-title">Mi rutina activa</div>
+      <div class="muted small">
+        Alumno: <strong>{{ me.full_name }}</strong> · {{ me.email }}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="/logout">Salir</a>
+    </div>
+  </div>
+
+  {% if msg %}
+    <div class="alert alert-info">{{ msg }}</div>
+  {% endif %}
+
+  {% if assignment and routine %}
+
+    <div class="routine-card mb-3">
+      <div class="routine-head">
+        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+          <div>
+            <h4 class="mb-1" style="font-weight:900;">{{ routine.title }}</h4>
+            <div class="subtle small">
+              Profesor: <strong>{{ assignment.professor.full_name }}</strong>
+              {% if assignment.start_date %} · Inicio: <strong>{{ assignment.start_date }}</strong>{% endif %}
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <div class="kpi">
+              <div class="lbl">Tipo</div>
+              <div class="val">{{ routine.routine_type.value }}</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">Ejercicios</div>
+              <div class="val">{{ routine.items|length }}</div>
+            </div>
+          </div>
+        </div>
+
+        {% if routine.notes %}
+          <div class="mt-3">
+            <div class="subtle small mb-1">Notas del profesor</div>
+            <div style="font-weight:600;">{{ routine.notes }}</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="p-3">
+
+        {% if routine.items|length == 0 %}
+          <div class="alert alert-warning mb-0">
+            Esta rutina todavía <strong>no tiene ejercicios cargados</strong>.
+            Avisale a tu profesor que agregue ejercicios a la rutina.
+          </div>
+        {% else %}
+
+          {% if view and view.mode == "DIAS" %}
+            <div class="accordion" id="accDias">
+              {% for g in view.groups %}
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="hDay{{ loop.index }}">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#cDay{{ loop.index }}"
+                            aria-expanded="{% if loop.first %}true{% else %}false{% endif %}"
+                            aria-controls="cDay{{ loop.index }}">
+                      {{ g.label }}
+                      <span class="ms-2 badge bg-secondary badge-pill">{{ g.rows|length }}</span>
+                    </button>
+                  </h2>
+                  <div id="cDay{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                       aria-labelledby="hDay{{ loop.index }}" data-bs-parent="#accDias">
+                    <div class="accordion-body">
+                      <div class="d-grid gap-2">
+                        {% for it in g.rows %}
+                          <div class="ex-card">
+                            <div class="d-flex justify-content-between flex-wrap gap-2">
+                              <div>
+                                <p class="ex-title">{{ it.exercise.name }}</p>
+                                <div class="ex-meta">
+                                  {% if it.exercise.muscle_group %}{{ it.exercise.muscle_group }}{% endif %}
+                                  {% if it.exercise.muscle_group and it.exercise.equipment %} · {% endif %}
+                                  {% if it.exercise.equipment %}{{ it.exercise.equipment }}{% endif %}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="ex-kpis">
+                              <div class="chip"><strong>{{ it.sets }}</strong> series</div>
+                              <div class="chip"><strong>{{ it.reps }}</strong> reps</div>
+                              {% if it.rest_seconds %}
+                                <div class="chip">descanso <strong>{{ it.rest_seconds }}s</strong></div>
+                              {% endif %}
+                            </div>
+
+                            {% if it.notes %}
+                              <div class="ex-notes">{{ it.notes }}</div>
+                            {% endif %}
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if view and view.mode == "SEMANAS" %}
+            <div class="accordion" id="accSemanas">
+              {% for wk in view.groups %}
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="hWk{{ loop.index }}">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#cWk{{ loop.index }}"
+                            aria-expanded="{% if loop.first %}true{% else %}false{% endif %}"
+                            aria-controls="cWk{{ loop.index }}">
+                      {{ wk.label }}
+                      <span class="ms-2 badge bg-secondary badge-pill">
+                        {{ wk.subgroups|length }} días
+                      </span>
+                    </button>
+                  </h2>
+                  <div id="cWk{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                       aria-labelledby="hWk{{ loop.index }}" data-bs-parent="#accSemanas">
+                    <div class="accordion-body">
+
+                      {% for day in wk.subgroups %}
+                        <div class="mb-3">
+                          <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div style="font-weight:900;">{{ day.label }}</div>
+                            <span class="badge bg-secondary badge-pill">{{ day.rows|length }}</span>
+                          </div>
+
+                          <div class="d-grid gap-2">
+                            {% for it in day.rows %}
+                              <div class="ex-card">
+                                <p class="ex-title">{{ it.exercise.name }}</p>
+                                <div class="ex-meta">
+                                  {% if it.exercise.muscle_group %}{{ it.exercise.muscle_group }}{% endif %}
+                                  {% if it.exercise.muscle_group and it.exercise.equipment %} · {% endif %}
+                                  {% if it.exercise.equipment %}{{ it.exercise.equipment }}{% endif %}
+                                </div>
+
+                                <div class="ex-kpis">
+                                  <div class="chip"><strong>{{ it.sets }}</strong> series</div>
+                                  <div class="chip"><strong>{{ it.reps }}</strong> reps</div>
+                                  {% if it.rest_seconds %}
+                                    <div class="chip">descanso <strong>{{ it.rest_seconds }}s</strong></div>
+                                  {% endif %}
+                                </div>
+
+                                {% if it.notes %}
+                                  <div class="ex-notes">{{ it.notes }}</div>
+                                {% endif %}
+                              </div>
+                            {% endfor %}
+                          </div>
+                        </div>
+
+                        {% if not loop.last %}<hr>{% endif %}
+                      {% endfor %}
+
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+        {% endif %}
+      </div>
+    </div>
+
+  {% endif %}
+</div>
+
+{% endblock %}

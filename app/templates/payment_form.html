@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:980px;margin:0 auto;padding:18px;}
+  .card2{border:1px solid rgba(255,255,255,.08);background:#1f242b;border-radius:18px;padding:18px}
+  .ttl{font-size:30px;font-weight:900;margin:0 0 4px}
+  .muted{opacity:.78}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media (max-width: 860px){
+    .grid,.grid3{grid-template-columns:1fr}
+  }
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:0 0 6px}
+  .inp,.sel,.ta{
+    width:100%;padding:12px 14px;border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff;
+  }
+  .ta{min-height:100px;resize:vertical}
+  .rowbtn{display:flex;gap:10px;flex-wrap:wrap}
+  .btnx{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+    background:#ca5aa6;color:#fff;text-decoration:none;font-weight:800;
+  }
+  .btnx.alt{background:transparent}
+  .alertx{
+    background:#5a2d37;border:1px solid rgba(255,255,255,.10);
+    color:#ffd7df;padding:12px 14px;border-radius:14px;margin-bottom:14px
+  }
+  .hint{font-size:12px;opacity:.72;margin-top:6px}
+  .infobox{
+    margin-bottom:14px;border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);border-radius:14px;padding:12px 14px;
+  }
+</style>
+
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+    <div>
+      <h1 class="ttl">Registrar pago</h1>
+      <div class="muted">
+        {{ student.full_name or (student.first_name ~ ' ' ~ student.last_name) }} · {{ student.email }}
+      </div>
+    </div>
+    <a class="btnx alt" href="/admin/alumnos/{{ student.id }}/payments">← Volver</a>
+  </div>
+
+  {% if error %}
+    <div class="alertx">{{ error }}</div>
+  {% endif %}
+
+  <div class="infobox">
+    <div style="font-weight:800;margin-bottom:4px;">Alta manual de pago</div>
+    <div class="muted">
+      El importe se calcula según la membresía y el método de pago seleccionado.
+      Las transferencias se registran inicialmente como pendientes.
+    </div>
+  </div>
+
+  <div class="card2">
+    <form method="post" enctype="multipart/form-data">
+      <div class="grid3" style="margin-bottom:14px">
+        <div>
+          <div class="lbl">Concepto</div>
+          <input class="inp" type="text" name="concept" value="Pago membresía">
+        </div>
+
+        <div>
+          <div class="lbl">Período</div>
+          <input class="inp" type="month" name="period_yyyymm" value="{{ today_period }}">
+        </div>
+
+        <div>
+          <div class="lbl">Importe</div>
+          <input class="inp" type="number" name="amount" id="amount" step="0.01" readonly>
+          <div class="hint">Se completa automáticamente según membresía y método de pago.</div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-bottom:14px">
+        <div>
+          <div class="lbl">Método de pago</div>
+          <select class="sel" name="payment_method" id="payment_method" required>
+            <option value="">Seleccionar...</option>
+            {% for pm in payment_methods %}
+              <option value="{{ pm }}">{{ pm }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <div class="lbl">Asignación de membresía</div>
+          <select class="sel" name="membership_assignment_id" id="membership_assignment_id" required>
+            <option value="">Seleccionar...</option>
+            {% for a in assignments %}
+              <option value="{{ a.id }}">
+                #{{ a.id }}
+                {% if a.membership %} · {{ a.membership.name }}{% endif %}
+                {% if a.starts_at %} · Inicio: {{ a.starts_at.strftime("%d/%m/%Y") }}{% endif %}
+                {% if a.expires_at %} · Vence: {{ a.expires_at.strftime("%d/%m/%Y") }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div class="lbl">Descripción</div>
+        <textarea class="ta" name="description" placeholder="Detalle opcional del pago..."></textarea>
+      </div>
+
+      <div id="receipt_wrap" style="display:none;margin-bottom:14px">
+        <div class="lbl">Comprobante de transferencia</div>
+        <input class="inp" type="file" name="receipt_file" accept="image/*">
+        <div class="hint">Subí una foto o captura del comprobante.</div>
+      </div>
+
+      <div style="margin-bottom:18px">
+        <div class="lbl">Nota del comprobante</div>
+        <input class="inp" type="text" name="receipt_note" placeholder="Ej: transferencia Banco Macro, alias, referencia, etc.">
+      </div>
+
+      <div class="rowbtn">
+        <button class="btnx" type="submit">💾 Guardar pago</button>
+        <a class="btnx alt" href="/admin/alumnos/{{ student.id }}/payments">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script id="assignment-prices-data" type="application/json">
+  {{ assignment_prices | tojson | safe }}
+</script>
+
+<script>
+  const paymentMethod = document.getElementById("payment_method");
+  const assignmentSelect = document.getElementById("membership_assignment_id");
+  const receiptWrap = document.getElementById("receipt_wrap");
+  const amountInput = document.getElementById("amount");
+
+  const assignmentPrices = JSON.parse(
+    document.getElementById("assignment-prices-data").textContent
+  );
+
+  function syncReceipt() {
+    if (paymentMethod.value === "TRANSFERENCIA") {
+      receiptWrap.style.display = "block";
+    } else {
+      receiptWrap.style.display = "none";
+    }
+  }
+
+  function syncAmount() {
+    const assignmentId = assignmentSelect.value;
+    const pm = paymentMethod.value;
+
+    if (!assignmentId || !pm) {
+      amountInput.value = "";
+      return;
+    }
+
+    const prices = assignmentPrices[assignmentId];
+    if (!prices) {
+      amountInput.value = "";
+      return;
+    }
+
+    if (prices[pm] !== undefined && prices[pm] !== null) {
+      amountInput.value = prices[pm];
+    } else {
+      amountInput.value = "";
+    }
+  }
+
+  paymentMethod.addEventListener("change", () => {
+    syncReceipt();
+    syncAmount();
+  });
+
+  assignmentSelect.addEventListener("change", syncAmount);
+
+  syncReceipt();
+  syncAmount();
+</script>
+
+{% endblock %}

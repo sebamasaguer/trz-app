@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .app-wrap{ max-width: 520px; margin: 0 auto; }
+  .card-soft{ border-radius: 16px; border:1px solid rgba(0,0,0,.08); box-shadow: 0 10px 22px rgba(0,0,0,.06); overflow:hidden; }
+  .head{ background: linear-gradient(135deg, rgba(0,0,0,.85), rgba(0,0,0,.65)); color:#fff; padding: 1rem 1.1rem; }
+  .kpi{ border-radius: 14px; border: 1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.22); padding:.6rem .8rem; min-width:140px; }
+  .kpi .lbl{ font-size:.78rem; opacity:.85; }
+  .kpi .val{ font-weight:900; font-size:1.1rem; }
+  #reader{ width:100%; border-radius:14px; overflow:hidden; }
+</style>
+
+<div class="app-wrap py-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">TRZ FUNCIONAL</h4>
+    <a class="btn btn-outline-secondary btn-sm" href="/logout">Salir</a>
+  </div>
+  <div class="text-muted small mb-3">Hola, <strong>{{ me.full_name }}</strong></div>
+
+  {% if banner %}
+    <div class="alert alert-warning">{{ banner }}</div>
+  {% endif %}
+
+  <div class="card-soft mb-3">
+    <div class="head">
+      <div class="d-flex justify-content-between flex-wrap gap-2">
+        <div>
+          <div style="font-weight:900;">Mi membresía</div>
+          <div style="opacity:.85;">Periodo: <strong>{{ period }}</strong></div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <div class="kpi">
+            <div class="lbl">Funcional</div>
+            <div class="val">{{ funcional_rem }}</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Musculación</div>
+            <div class="val">{{ muscu_rem }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-3">
+      <div class="mb-2 fw-semibold">Escanear QR para dar presente</div>
+      <div id="reader"></div>
+
+      <div id="msg" class="mt-3"></div>
+      <div class="text-muted small mt-2">
+        * Requiere HTTPS para cámara en iPhone/Android.
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary w-100" href="/alumno/rutina">Mi rutina</a>
+    <a class="btn btn-outline-primary w-100" href="/alumno/membresia">Detalle membresía</a>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+  const msg = document.getElementById("msg");
+
+  function show(type, text){
+    msg.innerHTML = `<div class="alert alert-${type} mb-0">${text}</div>`;
+  }
+
+  async function sendCheckin(qrText){
+    const form = new FormData();
+    form.append("qr", qrText);
+
+    const res = await fetch("/api/alumno/checkin", {
+      method: "POST",
+      body: form,
+      credentials: "include"
+    });
+
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data.ok){
+      show("danger", data.error || "Error al registrar.");
+      return;
+    }
+
+    show("success", `✅ Presente registrado (${data.service}). Restante: <strong>${data.remaining}</strong>`);
+  }
+
+  const html5QrCode = new Html5Qrcode("reader");
+  const config = { fps: 10, qrbox: { width: 240, height: 240 } };
+
+  // ✅ Intento 1: forzar cámara trasera
+  html5QrCode.start(
+    { facingMode: "environment" },
+    config,
+    (decodedText) => {
+      html5QrCode.pause(true);
+      sendCheckin(decodedText).finally(()=>{
+        setTimeout(()=> html5QrCode.resume(), 2000);
+      });
+    },
+    () => {} // ignore scan errors
+  ).catch(() => {
+    // ✅ Fallback: elegir la última cámara disponible (suele ser la trasera)
+    Html5Qrcode.getCameras().then(cameras => {
+      if(!cameras || !cameras.length){
+        show("danger","No se detectó cámara.");
+        return;
+      }
+      const camId = cameras[cameras.length - 1].id;
+
+      html5QrCode.start(
+        camId,
+        config,
+        (decodedText) => {
+          html5QrCode.pause(true);
+          sendCheckin(decodedText).finally(()=>{
+            setTimeout(()=> html5QrCode.resume(), 2000);
+          });
+        },
+        () => {}
+      ).catch(err => show("danger", "No se pudo iniciar la cámara: " + err));
+    }).catch(() => show("danger", "Permiso de cámara rechazado."));
+  });
+</script>
+{% endblock %}

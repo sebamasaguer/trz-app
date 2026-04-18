@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1180px;margin:0 auto;padding:18px}
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .ttl{font-size:38px;font-weight:900;margin:0}
+  .sub{opacity:.74;margin-top:6px}
+  .card2{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;overflow:hidden}
+  .body{padding:20px}
+  .foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+  @media (max-width: 960px){.grid4{grid-template-columns:1fr 1fr}}
+  @media (max-width: 620px){.grid4{grid-template-columns:1fr}}
+  .kpi{padding:18px;border-radius:18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+  .kpi .t{opacity:.72;font-size:.93rem}
+  .kpi .v{font-size:1.9rem;font-weight:900;margin-top:6px}
+  .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.78;margin:0 0 8px}
+  .inp,.ta{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:#2a2f36;color:#fff}
+  .ta{min-height:100px;resize:vertical}
+  .table-wrap{margin-top:16px;border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:auto}
+  table{width:100%;min-width:980px;border-collapse:collapse}
+  thead th{padding:14px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;color:rgba(255,255,255,.72)}
+  tbody td{padding:14px;border-bottom:1px solid rgba(255,255,255,.06)}
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1 class="ttl">Cerrar caja</h1>
+      <div class="sub">Revisá los movimientos del turno y registrá el saldo real contado.</div>
+    </div>
+    <a class="btn btn-outline-secondary" href="/admin/caja">Volver</a>
+  </div>
+
+  {% if not open_session %}
+    <div class="alert alert-warning">No hay una caja abierta para cerrar.</div>
+  {% else %}
+    <div class="grid4">
+      <div class="kpi">
+        <div class="t">Apertura</div>
+        <div class="v">${{ '%.2f'|format(open_session.opening_amount|float) }}</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Ingresos</div>
+        <div class="v">${{ '%.2f'|format(open_session.total_income|float) }}</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Egresos</div>
+        <div class="v">${{ '%.2f'|format(open_session.total_expense|float) }}</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Saldo teórico</div>
+        <div class="v">${{ '%.2f'|format(open_session.expected_closing_amount|float) }}</div>
+      </div>
+    </div>
+
+    <form method="post" action="/admin/caja/close">
+      <div class="card2">
+        <div class="body">
+          <div class="mb-3">
+            <label class="lbl">Saldo real contado</label>
+            <input class="inp" type="number" step="0.01" min="0" name="real_closing_amount" required placeholder="Ingresá el monto real contado">
+          </div>
+
+          <div>
+            <label class="lbl">Observaciones de cierre</label>
+            <textarea class="ta" name="notes" placeholder="Ej: diferencia por gastos no cargados, cambio, observaciones..."></textarea>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Alumno</th>
+                  <th>Concepto</th>
+                  <th>Categoría</th>
+                  <th>Importe</th>
+                  <th>Método</th>
+                  <th>Cargado por</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for m in movements %}
+                <tr>
+                  <td>{{ m.movement_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                  <td>
+                    {% if m.entry_type.value == "INGRESO" %}
+                        <span class="tag ok">INGRESO</span>
+                    {% else %}
+                        <span class="tag bad">EGRESO</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ m.student.full_name if m.student else '-' }}</td>
+                  <td>{{ m.concept }}</td>
+                  <td>{{ m.category }}</td>
+                  <td>${{ '%.2f'|format(m.amount|float) }}</td>
+                  <td>{{ m.payment_method.value if m.payment_method else '-' }}</td>
+                  <td>{{ m.created_by.full_name if m.created_by else '-' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="8">No hay movimientos registrados.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="foot">
+          <a class="btn btn-outline-secondary" href="/admin/caja">Cancelar</a>
+          <button class="btn btn-primary" type="submit">Cerrar caja</button>
+        </div>
+      </div>
+    </form>
+  {% endif %}
+</div>
+
+{% endblock %}

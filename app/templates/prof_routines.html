@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .trz-wrap{max-width:1100px;margin:0 auto;padding:18px;}
+  .trz-head{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:14px;}
+  .trz-title{margin:0;font-size:22px;font-weight:800}
+  .trz-sub{margin:4px 0 0;opacity:.8}
+  .trz-card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:16px;padding:14px}
+  .btn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{background:rgba(255,255,255,.12)}
+  .grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:12px}
+  @media (max-width: 980px){.grid{grid-template-columns:1fr 1fr}}
+  @media (max-width: 680px){.grid{grid-template-columns:1fr}}
+  .card{border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.10);border-radius:16px;padding:14px}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14)}
+  .muted{opacity:.75}
+</style>
+
+<div class="trz-wrap">
+  <div class="trz-head">
+    <div>
+      <h1 class="trz-title">Rutinas</h1>
+      <p class="trz-sub">Creá rutinas por días o por semanas y asignalas a alumnos.</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/profesor/routines/new">➕ Nueva rutina</a>
+        <a class="btn" href="/profesor/exercises">🏋️ Ejercicios</a>
+        <a class="btn" href="/profesor/assignments">🧩 Asignaciones</a>
+        <a class="btn" href="/profesor/alumnos">👥 Mis alumnos</a>
+    </div>
+  </div>
+
+  <div class="trz-card">
+    <div class="grid">
+      {% for r in routines %}
+        <div class="card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+            <div>
+              <div style="font-weight:900;font-size:16px">{{ r.title }}</div>
+              <div class="muted" style="font-size:12px">ID #{{ r.id }} · {{ r.created_at }}</div>
+            </div>
+            <span class="pill">{{ r.routine_type.value }}</span>
+          </div>
+
+          {% if r.notes %}
+            <div class="muted" style="margin-top:10px">{{ r.notes }}</div>
+          {% else %}
+            <div class="muted" style="margin-top:10px">Sin notas.</div>
+          {% endif %}
+
+          <div style="margin-top:12px">
+            <a class="btn" href="/profesor/routines/{{ r.id }}">Abrir</a>
+            <form method="post" action="/profesor/routines/{{ r.id }}/delete"
+                onsubmit="return confirm('¿Eliminar la rutina \"{{ r.title }}\"? Se borrarán también sus ejercicios y asignaciones.');"
+                style="display:inline-block; margin-left:.5rem;">
+            <button class="btn btn-outline-danger">Eliminar</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="muted">No tenés rutinas creadas todavía.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

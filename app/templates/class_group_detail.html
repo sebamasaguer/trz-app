@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .wrap{max-width:1300px;margin:0 auto;padding:18px}
+  .cardx{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:20px;padding:18px}
+  .meta{opacity:.72;font-size:13px;margin-top:4px}
+  table{width:100%;border-collapse:collapse;margin-top:16px}
+  th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+</style>
+
+<div class="wrap">
+  <div class="cardx">
+    <h1 style="margin-top:0">{{ group.gym_class.name }} · {{ group.name or "Grupo" }}</h1>
+    <div class="meta">{{ group.weekday.value }} · {{ group.start_time.strftime("%H:%M") }} - {{ group.end_time.strftime("%H:%M") }}</div>
+    <div class="meta">Cupo activo: {{ active_count }}/{{ group.capacity }}</div>
+    <div class="meta">Total registros: {{ total }} · Página {{ page }} de {{ total_pages }}</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Alumno</th>
+          <th>Estado</th>
+          <th>Notas</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in enrollments %}
+        <tr>
+          <td>{{ row.student.full_name or row.student.email }}</td>
+          <td>{{ row.status.value }}</td>
+          <td>{{ row.notes or "-" }}</td>
+          <td>{{ row.created_at.strftime("%d/%m/%Y %H:%M") if row.created_at else "-" }}</td>
+          <td>
+            {% if row.status.value == "ACTIVA" %}
+            <form method="post" action="/admin/classes/enrollments/{{ row.id }}/cancel">
+              <button class="btn btn-sm btn-outline-secondary" type="submit">Cancelar</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5">Sin inscriptos.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if total_pages > 1 %}
+    <div class="pager">
+      <div class="meta">Página {{ page }} de {{ total_pages }}</div>
+      <div style="display:flex;gap:10px">
+        <a class="btn btn-outline-secondary {% if not has_prev %}disabled{% endif %}"
+           href="/admin/classes/groups/{{ group.id }}?page={{ prev_page }}&page_size={{ page_size }}">
+          Anterior
+        </a>
+        <a class="btn btn-outline-secondary {% if not has_next %}disabled{% endif %}"
+           href="/admin/classes/groups/{{ group.id }}?page={{ next_page }}&page_size={{ page_size }}">
+          Siguiente
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="margin-top:16px">
+      <a class="btn btn-outline-secondary" href="/admin/classes">Volver</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

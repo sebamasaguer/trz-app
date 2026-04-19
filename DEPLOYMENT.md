@@ -62,10 +62,12 @@ Ve a la pestaña **"Environment"** de tu aplicación en Dokploy y agrega las sig
 | `COOKIE_SECURE` | `True` (si usas HTTPS) |
 | `APP_BASE_URL` | `https://tu-dominio.com` |
 
-### Paso 5: Ejecutar Migraciones y Seed (Opcional/Inicial)
-Para inicializar la base de datos, puedes usar la terminal de la aplicación en Dokploy una vez que esté desplegada:
-1. Ejecutar migraciones: `alembic upgrade head`
-2. (Opcional) Sembrar el administrador inicial: `python seed_admin.py`
+### Paso 5: Migraciones y Seed (Opcional/Inicial)
+La aplicación está configurada para ejecutar las migraciones automáticamente al iniciar el contenedor mediante el archivo `entrypoint.sh`.
+
+Si necesitas ejecutarlas manualmente o realizar el sembrado inicial:
+1. **Migraciones:** `alembic upgrade head` (aunque se ejecutan solas al desplegar).
+2. **Sembrar administrador:** `python seed_admin.py` (ejecutar desde la terminal de Dokploy si es la primera vez).
 
 ### Paso 6: Desplegar
 1. Haz clic en **"Deploy"**. Dokploy construirá la imagen usando el `Dockerfile` y levantará el contenedor.

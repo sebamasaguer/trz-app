@@ -1,11 +1,10 @@
+
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
 # Set environment variables
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 # Set work directory
 WORKDIR /app
@@ -21,23 +20,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-
-# Copy entrypoint script first
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
-
 # Copy project
 COPY . .
-
-# Copy project
-COPY . .
-
-# Make entrypoint executable
-RUN chmod +x entrypoint.sh
-
 
 # Expose port
 EXPOSE 8000
 
-# Set entrypoint
-ENTRYPOINT ["./entrypoint.sh"]
+# Command to run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

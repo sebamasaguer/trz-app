@@ -26,7 +26,8 @@ def upgrade() -> None:
         if bind.dialect.name == 'postgresql':
             res = bind.execute(sa.text(f"SELECT 1 FROM pg_type WHERE typname = '{name}'"))
             if not res.fetchone():
-                op.execute(f"CREATE TYPE {name} AS ENUM ({', '.join(f"'{v}'" for v in values)})")
+                values_str = ", ".join(f"'{v}'" for v in values)
+                op.execute(f"CREATE TYPE {name} AS ENUM ({values_str})")
 
     create_enum_if_not_exists('service_kind', ['FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO'])
     create_enum_if_not_exists('class_status', ['ACTIVA', 'INACTIVA', 'CANCELADA'])

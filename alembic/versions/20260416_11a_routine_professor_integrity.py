@@ -6,6 +6,7 @@ Create Date: 2026-04-16
 """
 
 from alembic import op
+from sqlalchemy import inspect
 
 
 revision = "20260416_11a"
@@ -15,6 +16,9 @@ depends_on = None
 
 
 def upgrade():
+    bind = op.get_bind()
+    inspector = inspect(bind)
+
     # ------------------------------------------------------------------
     # 1) Desactivar duplicados activos de routine_assignments
     #    Mantener la fila activa más nueva por student_id
@@ -57,36 +61,43 @@ def upgrade():
     # ------------------------------------------------------------------
     # 3) Constraint único del vínculo profesor/alumno
     # ------------------------------------------------------------------
-    op.create_unique_constraint(
-        "uq_profesor_alumnos_profesor_alumno",
-        "profesor_alumnos",
-        ["profesor_id", "alumno_id"],
-    )
+    existing_constraints = [c["name"] for c in inspector.get_unique_constraints("profesor_alumnos")]
+    if "uq_profesor_alumnos_profesor_alumno" not in existing_constraints:
+        op.create_unique_constraint(
+            "uq_profesor_alumnos_profesor_alumno",
+            "profesor_alumnos",
+            ["profesor_id", "alumno_id"],
+        )
 
-    op.create_index(
-        "ix_profesor_alumnos_profesor_alumno",
-        "profesor_alumnos",
-        ["profesor_id", "alumno_id"],
-        unique=False,
-    )
+    existing_indexes_pa = [idx["name"] for idx in inspector.get_indexes("profesor_alumnos")]
+    if "ix_profesor_alumnos_profesor_alumno" not in existing_indexes_pa:
+        op.create_index(
+            "ix_profesor_alumnos_profesor_alumno",
+            "profesor_alumnos",
+            ["profesor_id", "alumno_id"],
+            unique=False,
+        )
 
     # ------------------------------------------------------------------
     # 4) Índice único parcial: una sola rutina activa por alumno
     # ------------------------------------------------------------------
-    op.execute(
-        """
-        CREATE UNIQUE INDEX ux_routine_assignments_student_active
-        ON routine_assignments (student_id)
-        WHERE is_active = true
-        """
-    )
+    existing_indexes_ra = [idx["name"] for idx in inspector.get_indexes("routine_assignments")]
+    if "ux_routine_assignments_student_active" not in existing_indexes_ra:
+        op.execute(
+            """
+            CREATE UNIQUE INDEX ux_routine_assignments_student_active
+            ON routine_assignments (student_id)
+            WHERE is_active = true
+            """
+        )
 
-    op.create_index(
-        "ix_routine_assignments_student_active_created_at",
-        "routine_assignments",
-        ["student_id", "is_active", "created_at"],
-        unique=False,
-    )
+    if "ix_routine_assignments_student_active_created_at" not in existing_indexes_ra:
+        op.create_index(
+            "ix_routine_assignments_student_active_created_at",
+            "routine_assignments",
+            ["student_id", "is_active", "created_at"],
+            unique=False,
+        )
 
 
 def downgrade():

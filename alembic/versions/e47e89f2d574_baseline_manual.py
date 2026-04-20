@@ -20,30 +20,38 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # --- CREATE ENUMS ---
-    op.execute("CREATE TYPE service_kind AS ENUM ('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO')")
-    op.execute("CREATE TYPE class_status AS ENUM ('ACTIVA', 'INACTIVA', 'CANCELADA')")
-    op.execute("CREATE TYPE membership_kind AS ENUM ('MENSUAL', 'QUINCENAL', 'CLASES', 'OTRO')")
-    op.execute("CREATE TYPE template_followup_kind AS ENUM ('GENERAL', 'RECORDATORIO_PAGO', 'BIENVENIDA', 'REACTIVACION', 'PROSPECTO')")
-    op.execute("CREATE TYPE message_template_channel AS ENUM ('WHATSAPP', 'EMAIL', 'SMS', 'GENERAL')")
-    op.execute("CREATE TYPE role_enum AS ENUM ('ADMIN', 'PROFESOR', 'ALUMNO', 'RECEPCION')")
-    op.execute("CREATE TYPE cash_session_status AS ENUM ('ABIERTA', 'CERRADA')")
-    op.execute("CREATE TYPE weekday_enum AS ENUM ('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO')")
-    op.execute("CREATE TYPE prospect_status AS ENUM ('NUEVO', 'CONTACTADO', 'INTERESADO', 'INSCRIPTO', 'DESCARTADO')")
-    op.execute("CREATE TYPE routine_type AS ENUM ('FUNCIONAL', 'MUSCULACION', 'PERSONALIZADA')")
-    op.execute("CREATE TYPE followup_kind AS ENUM ('GENERAL', 'COBRO', 'ASISTENCIA', 'TECNICO', 'COMERCIAL')")
-    op.execute("CREATE TYPE followup_status AS ENUM ('PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'CANCELADO')")
-    op.execute("CREATE TYPE followup_priority AS ENUM ('BAJA', 'MEDIA', 'ALTA', 'URGENTE')")
-    op.execute("CREATE TYPE followup_channel AS ENUM ('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL')")
-    op.execute("CREATE TYPE cash_entry_type AS ENUM ('INGRESO', 'EGRESO')")
-    op.execute("CREATE TYPE payment_method AS ENUM ('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO')")
-    op.execute("CREATE TYPE cash_payment_status AS ENUM ('PENDIENTE', 'PAGADO', 'CANCELADO')")
-    op.execute("CREATE TYPE enrollment_status AS ENUM ('ACTIVO', 'INACTIVO', 'LISTA_ESPERA', 'CANCELADO')")
-    op.execute("CREATE TYPE conversation_channel AS ENUM ('WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB')")
-    op.execute("CREATE TYPE conversation_type AS ENUM ('GENERAL', 'PROSPECTO', 'SOPORTE', 'COMERCIAL')")
-    op.execute("CREATE TYPE conversation_status AS ENUM ('NUEVA', 'BOT', 'HUMANO', 'CERRADA')")
-    op.execute("CREATE TYPE commercial_stage AS ENUM ('NUEVO', 'CONTACTADO', 'CALIFICADO', 'PRESENTACION', 'NEGOCIACION', 'CIERRE_GANADO', 'CIERRE_PERDIDO', 'SEGUIMIENTO')")
-    op.execute("CREATE TYPE followup_action_type AS ENUM ('LLAMADA', 'WHATSAPP', 'EMAIL', 'NOTA', 'TAREA', 'OTRO')")
-    op.execute("CREATE TYPE sender_type AS ENUM ('USER', 'CONTACT', 'SYSTEM', 'BOT')")
+    # We use a helper to create enums only if they don't exist
+    def create_enum_if_not_exists(name, values):
+        bind = op.get_bind()
+        if bind.dialect.name == 'postgresql':
+            res = bind.execute(sa.text(f"SELECT 1 FROM pg_type WHERE typname = '{name}'"))
+            if not res.fetchone():
+                op.execute(f"CREATE TYPE {name} AS ENUM ({', '.join(f"'{v}'" for v in values)})")
+
+    create_enum_if_not_exists('service_kind', ['FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO'])
+    create_enum_if_not_exists('class_status', ['ACTIVA', 'INACTIVA', 'CANCELADA'])
+    create_enum_if_not_exists('membership_kind', ['MENSUAL', 'QUINCENAL', 'CLASES', 'OTRO'])
+    create_enum_if_not_exists('template_followup_kind', ['GENERAL', 'RECORDATORIO_PAGO', 'BIENVENIDA', 'REACTIVACION', 'PROSPECTO'])
+    create_enum_if_not_exists('message_template_channel', ['WHATSAPP', 'EMAIL', 'SMS', 'GENERAL'])
+    create_enum_if_not_exists('role_enum', ['ADMIN', 'PROFESOR', 'ALUMNO', 'RECEPCION'])
+    create_enum_if_not_exists('cash_session_status', ['ABIERTA', 'CERRADA'])
+    create_enum_if_not_exists('weekday_enum', ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'])
+    create_enum_if_not_exists('prospect_status', ['NUEVO', 'CONTACTADO', 'INTERESADO', 'INSCRIPTO', 'DESCARTADO'])
+    create_enum_if_not_exists('routine_type', ['FUNCIONAL', 'MUSCULACION', 'PERSONALIZADA'])
+    create_enum_if_not_exists('followup_kind', ['GENERAL', 'COBRO', 'ASISTENCIA', 'TECNICO', 'COMERCIAL'])
+    create_enum_if_not_exists('followup_status', ['PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'CANCELADO'])
+    create_enum_if_not_exists('followup_priority', ['BAJA', 'MEDIA', 'ALTA', 'URGENTE'])
+    create_enum_if_not_exists('followup_channel', ['WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL'])
+    create_enum_if_not_exists('cash_entry_type', ['INGRESO', 'EGRESO'])
+    create_enum_if_not_exists('payment_method', ['EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO'])
+    create_enum_if_not_exists('cash_payment_status', ['PENDIENTE', 'PAGADO', 'CANCELADO'])
+    create_enum_if_not_exists('enrollment_status', ['ACTIVO', 'INACTIVO', 'LISTA_ESPERA', 'CANCELADO'])
+    create_enum_if_not_exists('conversation_channel', ['WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB'])
+    create_enum_if_not_exists('conversation_type', ['GENERAL', 'PROSPECTO', 'SOPORTE', 'COMERCIAL'])
+    create_enum_if_not_exists('conversation_status', ['NUEVA', 'BOT', 'HUMANO', 'CERRADA'])
+    create_enum_if_not_exists('commercial_stage', ['NUEVO', 'CONTACTADO', 'CALIFICADO', 'PRESENTACION', 'NEGOCIACION', 'CIERRE_GANADO', 'CIERRE_PERDIDO', 'SEGUIMIENTO'])
+    create_enum_if_not_exists('followup_action_type', ['LLAMADA', 'WHATSAPP', 'EMAIL', 'NOTA', 'TAREA', 'OTRO'])
+    create_enum_if_not_exists('sender_type', ['USER', 'CONTACT', 'SYSTEM', 'BOT'])
 
     # --- CREATE TABLES ---
 
@@ -52,8 +60,8 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=120), nullable=False),
         sa.Column('description', sa.Text(), nullable=False),
-        sa.Column('service_kind', sa.Enum('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind'), nullable=False),
-        sa.Column('status', sa.Enum('ACTIVA', 'INACTIVA', 'CANCELADA', name='class_status'), nullable=False),
+        sa.Column('service_kind', sa.Enum('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind', create_type=False), nullable=False),
+        sa.Column('status', sa.Enum('ACTIVA', 'INACTIVA', 'CANCELADA', name='class_status', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
@@ -65,7 +73,7 @@ def upgrade() -> None:
         'memberships',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=180), nullable=False),
-        sa.Column('kind', sa.Enum('MENSUAL', 'QUINCENAL', 'CLASES', 'OTRO', name='membership_kind'), nullable=False),
+        sa.Column('kind', sa.Enum('MENSUAL', 'QUINCENAL', 'CLASES', 'OTRO', name='membership_kind', create_type=False), nullable=False),
         sa.Column('funcional_classes', sa.Integer(), nullable=True),
         sa.Column('musculacion_classes', sa.Integer(), nullable=True),
         sa.Column('funcional_unlimited', sa.Boolean(), nullable=False),
@@ -79,8 +87,8 @@ def upgrade() -> None:
         'message_templates',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=120), nullable=False),
-        sa.Column('kind', sa.Enum('GENERAL', 'RECORDATORIO_PAGO', 'BIENVENIDA', 'REACTIVACION', 'PROSPECTO', name='template_followup_kind'), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'EMAIL', 'SMS', 'GENERAL', name='message_template_channel'), nullable=False),
+        sa.Column('kind', sa.Enum('GENERAL', 'RECORDATORIO_PAGO', 'BIENVENIDA', 'REACTIVACION', 'PROSPECTO', name='template_followup_kind', create_type=False), nullable=False),
+        sa.Column('channel', sa.Enum('WHATSAPP', 'EMAIL', 'SMS', 'GENERAL', name='message_template_channel', create_type=False), nullable=False),
         sa.Column('subject', sa.String(length=180), nullable=False),
         sa.Column('body', sa.Text(), nullable=False),
         sa.Column('is_active', sa.Boolean(), nullable=False),
@@ -107,7 +115,7 @@ def upgrade() -> None:
         sa.Column('emergency_contact_phone', sa.String(length=30), nullable=False),
         sa.Column('full_name', sa.String(length=255), nullable=False),
         sa.Column('password_hash', sa.String(length=255), nullable=False),
-        sa.Column('role', sa.Enum('ADMIN', 'PROFESOR', 'ALUMNO', 'RECEPCION', name='role_enum'), nullable=False),
+        sa.Column('role', sa.Enum('ADMIN', 'PROFESOR', 'ALUMNO', 'RECEPCION', name='role_enum', create_type=False), nullable=False),
         sa.Column('is_active', sa.Boolean(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('must_change_password', sa.Boolean(), nullable=False),
@@ -120,7 +128,7 @@ def upgrade() -> None:
     op.create_table(
         'cash_sessions',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('status', sa.Enum('ABIERTA', 'CERRADA', name='cash_session_status'), nullable=False),
+        sa.Column('status', sa.Enum('ABIERTA', 'CERRADA', name='cash_session_status', create_type=False), nullable=False),
         sa.Column('opened_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('closed_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('opened_by_user_id', sa.Integer(), nullable=False),
@@ -146,7 +154,7 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('class_id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=120), nullable=False),
-        sa.Column('weekday', sa.Enum('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', name='weekday_enum'), nullable=False),
+        sa.Column('weekday', sa.Enum('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', name='weekday_enum', create_type=False), nullable=False),
         sa.Column('start_time', sa.Time(), nullable=False),
         sa.Column('end_time', sa.Time(), nullable=False),
         sa.Column('capacity', sa.Integer(), nullable=False),
@@ -185,7 +193,7 @@ def upgrade() -> None:
         sa.Column('assigned_by', sa.Integer(), nullable=False),
         sa.Column('start_date', sa.Date(), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=False),
-        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method'), nullable=True),
+        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=True),
         sa.Column('amount_snapshot', sa.Numeric(precision=12, scale=2), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('period_yyyymm', sa.String(length=7), nullable=True),
@@ -201,7 +209,7 @@ def upgrade() -> None:
         'membership_prices',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('membership_id', sa.Integer(), nullable=False),
-        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method'), nullable=False),
+        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=False),
         sa.Column('amount', sa.Numeric(precision=12, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['membership_id'], ['memberships.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
@@ -230,7 +238,7 @@ def upgrade() -> None:
         sa.Column('phone', sa.String(length=30), nullable=False),
         sa.Column('email', sa.String(length=255), nullable=False),
         sa.Column('source', sa.String(length=60), nullable=False),
-        sa.Column('status', sa.Enum('NUEVO', 'CONTACTADO', 'INTERESADO', 'INSCRIPTO', 'DESCARTADO', name='prospect_status'), nullable=False),
+        sa.Column('status', sa.Enum('NUEVO', 'CONTACTADO', 'INTERESADO', 'INSCRIPTO', 'DESCARTADO', name='prospect_status', create_type=False), nullable=False),
         sa.Column('interest_summary', sa.String(length=255), nullable=False),
         sa.Column('notes', sa.Text(), nullable=False),
         sa.Column('assigned_to_user_id', sa.Integer(), nullable=True),
@@ -252,7 +260,7 @@ def upgrade() -> None:
         sa.Column('professor_id', sa.Integer(), nullable=False),
         sa.Column('title', sa.String(length=180), nullable=False),
         sa.Column('notes', sa.String(length=2000), nullable=False),
-        sa.Column('routine_type', sa.Enum('FUNCIONAL', 'MUSCULACION', 'PERSONALIZADA', name='routine_type'), nullable=False),
+        sa.Column('routine_type', sa.Enum('FUNCIONAL', 'MUSCULACION', 'PERSONALIZADA', name='routine_type', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['professor_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
@@ -265,10 +273,10 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=False),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
-        sa.Column('kind', sa.Enum('GENERAL', 'COBRO', 'ASISTENCIA', 'TECNICO', 'COMERCIAL', name='followup_kind'), nullable=False),
-        sa.Column('status', sa.Enum('PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'CANCELADO', name='followup_status'), nullable=False),
-        sa.Column('priority', sa.Enum('BAJA', 'MEDIA', 'ALTA', 'URGENTE', name='followup_priority'), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel'), nullable=False),
+        sa.Column('kind', sa.Enum('GENERAL', 'COBRO', 'ASISTENCIA', 'TECNICO', 'COMERCIAL', name='followup_kind', create_type=False), nullable=False),
+        sa.Column('status', sa.Enum('PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'CANCELADO', name='followup_status', create_type=False), nullable=False),
+        sa.Column('priority', sa.Enum('BAJA', 'MEDIA', 'ALTA', 'URGENTE', name='followup_priority', create_type=False), nullable=False),
+        sa.Column('channel', sa.Enum('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel', create_type=False), nullable=False),
         sa.Column('title', sa.String(length=180), nullable=False),
         sa.Column('notes', sa.Text(), nullable=False),
         sa.Column('next_contact_date', sa.Date(), nullable=True),
@@ -299,7 +307,7 @@ def upgrade() -> None:
         'cash_movements',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('session_id', sa.Integer(), nullable=True),
-        sa.Column('entry_type', sa.Enum('INGRESO', 'EGRESO', name='cash_entry_type'), nullable=False),
+        sa.Column('entry_type', sa.Enum('INGRESO', 'EGRESO', name='cash_entry_type', create_type=False), nullable=False),
         sa.Column('category', sa.String(length=60), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=True),
         sa.Column('membership_assignment_id', sa.Integer(), nullable=True),
@@ -307,9 +315,9 @@ def upgrade() -> None:
         sa.Column('concept', sa.String(length=150), nullable=False),
         sa.Column('notes', sa.String(length=500), nullable=False),
         sa.Column('period_yyyymm', sa.String(length=7), nullable=True),
-        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method'), nullable=True),
+        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=True),
         sa.Column('amount', sa.Numeric(precision=12, scale=2), nullable=False),
-        sa.Column('status', sa.Enum('PENDIENTE', 'PAGADO', 'CANCELADO', name='cash_payment_status'), nullable=False),
+        sa.Column('status', sa.Enum('PENDIENTE', 'PAGADO', 'CANCELADO', name='cash_payment_status', create_type=False), nullable=False),
         sa.Column('receipt_image_path', sa.String(length=255), nullable=True),
         sa.Column('receipt_note', sa.String(length=255), nullable=False),
         sa.Column('movement_date', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -336,7 +344,7 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('group_id', sa.Integer(), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=False),
-        sa.Column('status', sa.Enum('ACTIVO', 'INACTIVO', 'LISTA_ESPERA', 'CANCELADO', name='enrollment_status'), nullable=False),
+        sa.Column('status', sa.Enum('ACTIVO', 'INACTIVO', 'LISTA_ESPERA', 'CANCELADO', name='enrollment_status', create_type=False), nullable=False),
         sa.Column('notes', sa.Text(), nullable=False),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -353,14 +361,14 @@ def upgrade() -> None:
     op.create_table(
         'contact_conversations',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB', name='conversation_channel'), nullable=False),
+        sa.Column('channel', sa.Enum('WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB', name='conversation_channel', create_type=False), nullable=False),
         sa.Column('phone', sa.String(length=30), nullable=False),
         sa.Column('external_chat_id', sa.String(length=180), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=True),
         sa.Column('prospect_id', sa.Integer(), nullable=True),
         sa.Column('followup_id', sa.Integer(), nullable=True),
-        sa.Column('conversation_type', sa.Enum('GENERAL', 'PROSPECTO', 'SOPORTE', 'COMERCIAL', name='conversation_type'), nullable=False),
-        sa.Column('status', sa.Enum('NUEVA', 'BOT', 'HUMANO', 'CERRADA', name='conversation_status'), nullable=False),
+        sa.Column('conversation_type', sa.Enum('GENERAL', 'PROSPECTO', 'SOPORTE', 'COMERCIAL', name='conversation_type', create_type=False), nullable=False),
+        sa.Column('status', sa.Enum('NUEVA', 'BOT', 'HUMANO', 'CERRADA', name='conversation_status', create_type=False), nullable=False),
         sa.Column('intent_last', sa.String(length=80), nullable=False),
         sa.Column('lead_temperature', sa.String(length=20), nullable=False),
         sa.Column('handoff_reason', sa.String(length=255), nullable=False),
@@ -371,7 +379,7 @@ def upgrade() -> None:
         sa.Column('assistant_paused', sa.Boolean(), nullable=False),
         sa.Column('assistant_paused_at', sa.DateTime(), nullable=True),
         sa.Column('assistant_paused_by_user_id', sa.Integer(), nullable=True),
-        sa.Column('commercial_stage', sa.Enum('NUEVO', 'CONTACTADO', 'CALIFICADO', 'PRESENTACION', 'NEGOCIACION', 'CIERRE_GANADO', 'CIERRE_PERDIDO', 'SEGUIMIENTO', name='commercial_stage'), nullable=False),
+        sa.Column('commercial_stage', sa.Enum('NUEVO', 'CONTACTADO', 'CALIFICADO', 'PRESENTACION', 'NEGOCIACION', 'CIERRE_GANADO', 'CIERRE_PERDIDO', 'SEGUIMIENTO', name='commercial_stage', create_type=False), nullable=False),
         sa.Column('commercial_stage_updated_at', sa.DateTime(), nullable=True),
         sa.Column('commercial_stage_note', sa.String(length=255), nullable=False),
         sa.ForeignKeyConstraint(['assigned_to_user_id'], ['users.id'], ondelete='SET NULL'),
@@ -400,8 +408,8 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('followup_id', sa.Integer(), nullable=False),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
-        sa.Column('action_type', sa.Enum('LLAMADA', 'WHATSAPP', 'EMAIL', 'NOTA', 'TAREA', 'OTRO', name='followup_action_type'), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel'), nullable=True),
+        sa.Column('action_type', sa.Enum('LLAMADA', 'WHATSAPP', 'EMAIL', 'NOTA', 'TAREA', 'OTRO', name='followup_action_type', create_type=False), nullable=False),
+        sa.Column('channel', sa.Enum('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel', create_type=False), nullable=True),
         sa.Column('summary', sa.String(length=255), nullable=False),
         sa.Column('payload_text', sa.Text(), nullable=False),
         sa.Column('external_ref', sa.String(length=180), nullable=False),
@@ -423,7 +431,7 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('assignment_id', sa.Integer(), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=False),
-        sa.Column('service', sa.Enum('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind'), nullable=False),
+        sa.Column('service', sa.Enum('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind', create_type=False), nullable=False),
         sa.Column('used_at', sa.Date(), nullable=False),
         sa.Column('used_at_time', sa.Time(), nullable=True),
         sa.Column('period_yyyymm', sa.String(length=7), nullable=False),
@@ -484,7 +492,7 @@ def upgrade() -> None:
         'conversation_messages',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('conversation_id', sa.Integer(), nullable=False),
-        sa.Column('sender_type', sa.Enum('USER', 'CONTACT', 'SYSTEM', 'BOT', name='sender_type'), nullable=False),
+        sa.Column('sender_type', sa.Enum('USER', 'CONTACT', 'SYSTEM', 'BOT', name='sender_type', create_type=False), nullable=False),
         sa.Column('is_inbound', sa.Boolean(), nullable=False),
         sa.Column('message_text', sa.Text(), nullable=False),
         sa.Column('external_ref', sa.String(length=180), nullable=False),
@@ -527,27 +535,27 @@ def downgrade() -> None:
     op.drop_table('memberships')
     op.drop_table('gym_classes')
 
-    op.execute("DROP TYPE sender_type")
-    op.execute("DROP TYPE followup_action_type")
-    op.execute("DROP TYPE commercial_stage")
-    op.execute("DROP TYPE conversation_status")
-    op.execute("DROP TYPE conversation_type")
-    op.execute("DROP TYPE conversation_channel")
-    op.execute("DROP TYPE enrollment_status")
-    op.execute("DROP TYPE cash_payment_status")
-    op.execute("DROP TYPE payment_method")
-    op.execute("DROP TYPE cash_entry_type")
-    op.execute("DROP TYPE followup_channel")
-    op.execute("DROP TYPE followup_priority")
-    op.execute("DROP TYPE followup_status")
-    op.execute("DROP TYPE followup_kind")
-    op.execute("DROP TYPE routine_type")
-    op.execute("DROP TYPE prospect_status")
-    op.execute("DROP TYPE weekday_enum")
-    op.execute("DROP TYPE cash_session_status")
-    op.execute("DROP TYPE role_enum")
-    op.execute("DROP TYPE message_template_channel")
-    op.execute("DROP TYPE template_followup_kind")
-    op.execute("DROP TYPE membership_kind")
-    op.execute("DROP TYPE class_status")
-    op.execute("DROP TYPE service_kind")
+    op.execute("DROP TYPE IF EXISTS sender_type")
+    op.execute("DROP TYPE IF EXISTS followup_action_type")
+    op.execute("DROP TYPE IF EXISTS commercial_stage")
+    op.execute("DROP TYPE IF EXISTS conversation_status")
+    op.execute("DROP TYPE IF EXISTS conversation_type")
+    op.execute("DROP TYPE IF EXISTS conversation_channel")
+    op.execute("DROP TYPE IF EXISTS enrollment_status")
+    op.execute("DROP TYPE IF EXISTS cash_payment_status")
+    op.execute("DROP TYPE IF EXISTS payment_method")
+    op.execute("DROP TYPE IF EXISTS cash_entry_type")
+    op.execute("DROP TYPE IF EXISTS followup_channel")
+    op.execute("DROP TYPE IF EXISTS followup_priority")
+    op.execute("DROP TYPE IF EXISTS followup_status")
+    op.execute("DROP TYPE IF EXISTS followup_kind")
+    op.execute("DROP TYPE IF EXISTS routine_type")
+    op.execute("DROP TYPE IF EXISTS prospect_status")
+    op.execute("DROP TYPE IF EXISTS weekday_enum")
+    op.execute("DROP TYPE IF EXISTS cash_session_status")
+    op.execute("DROP TYPE IF EXISTS role_enum")
+    op.execute("DROP TYPE IF EXISTS message_template_channel")
+    op.execute("DROP TYPE IF EXISTS template_followup_kind")
+    op.execute("DROP TYPE IF EXISTS membership_kind")
+    op.execute("DROP TYPE IF EXISTS class_status")
+    op.execute("DROP TYPE IF EXISTS service_kind")

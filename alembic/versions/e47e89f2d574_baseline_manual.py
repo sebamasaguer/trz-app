@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -54,6 +55,12 @@ def upgrade() -> None:
     create_enum_if_not_exists('followup_action_type', ['LLAMADA', 'WHATSAPP', 'EMAIL', 'NOTA', 'TAREA', 'OTRO'])
     create_enum_if_not_exists('sender_type', ['USER', 'CONTACT', 'SYSTEM', 'BOT'])
 
+    # --- HELPERS ---
+    bind = op.get_bind()
+    now_func = sa.text('now()')
+    if bind.dialect.name == 'sqlite':
+        now_func = sa.text('CURRENT_TIMESTAMP')
+
     # --- CREATE TABLES ---
 
     op.create_table(
@@ -61,8 +68,8 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=120), nullable=False),
         sa.Column('description', sa.Text(), nullable=False),
-        sa.Column('service_kind', sa.Enum('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind', create_type=False), nullable=False),
-        sa.Column('status', sa.Enum('ACTIVA', 'INACTIVA', 'CANCELADA', name='class_status', create_type=False), nullable=False),
+        sa.Column('service_kind', postgresql.ENUM('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind', create_type=False), nullable=False),
+        sa.Column('status', postgresql.ENUM('ACTIVA', 'INACTIVA', 'CANCELADA', name='class_status', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
@@ -74,13 +81,13 @@ def upgrade() -> None:
         'memberships',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=180), nullable=False),
-        sa.Column('kind', sa.Enum('MENSUAL', 'QUINCENAL', 'CLASES', 'OTRO', name='membership_kind', create_type=False), nullable=False),
+        sa.Column('kind', postgresql.ENUM('MENSUAL', 'QUINCENAL', 'CLASES', 'OTRO', name='membership_kind', create_type=False), nullable=False),
         sa.Column('funcional_classes', sa.Integer(), nullable=True),
         sa.Column('musculacion_classes', sa.Integer(), nullable=True),
         sa.Column('funcional_unlimited', sa.Boolean(), nullable=False),
         sa.Column('musculacion_unlimited', sa.Boolean(), nullable=False),
         sa.Column('is_active', sa.Boolean(), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=now_func, nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
 
@@ -88,8 +95,8 @@ def upgrade() -> None:
         'message_templates',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=120), nullable=False),
-        sa.Column('kind', sa.Enum('GENERAL', 'RECORDATORIO_PAGO', 'BIENVENIDA', 'REACTIVACION', 'PROSPECTO', name='template_followup_kind', create_type=False), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'EMAIL', 'SMS', 'GENERAL', name='message_template_channel', create_type=False), nullable=False),
+        sa.Column('kind', postgresql.ENUM('GENERAL', 'RECORDATORIO_PAGO', 'BIENVENIDA', 'REACTIVACION', 'PROSPECTO', name='template_followup_kind', create_type=False), nullable=False),
+        sa.Column('channel', postgresql.ENUM('WHATSAPP', 'EMAIL', 'SMS', 'GENERAL', name='message_template_channel', create_type=False), nullable=False),
         sa.Column('subject', sa.String(length=180), nullable=False),
         sa.Column('body', sa.Text(), nullable=False),
         sa.Column('is_active', sa.Boolean(), nullable=False),
@@ -116,7 +123,7 @@ def upgrade() -> None:
         sa.Column('emergency_contact_phone', sa.String(length=30), nullable=False),
         sa.Column('full_name', sa.String(length=255), nullable=False),
         sa.Column('password_hash', sa.String(length=255), nullable=False),
-        sa.Column('role', sa.Enum('ADMIN', 'PROFESOR', 'ALUMNO', 'RECEPCION', name='role_enum', create_type=False), nullable=False),
+        sa.Column('role', postgresql.ENUM('ADMIN', 'PROFESOR', 'ALUMNO', 'RECEPCION', name='role_enum', create_type=False), nullable=False),
         sa.Column('is_active', sa.Boolean(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('must_change_password', sa.Boolean(), nullable=False),
@@ -129,8 +136,8 @@ def upgrade() -> None:
     op.create_table(
         'cash_sessions',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('status', sa.Enum('ABIERTA', 'CERRADA', name='cash_session_status', create_type=False), nullable=False),
-        sa.Column('opened_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('status', postgresql.ENUM('ABIERTA', 'CERRADA', name='cash_session_status', create_type=False), nullable=False),
+        sa.Column('opened_at', sa.DateTime(timezone=True), server_default=now_func, nullable=False),
         sa.Column('closed_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('opened_by_user_id', sa.Integer(), nullable=False),
         sa.Column('closed_by_user_id', sa.Integer(), nullable=True),
@@ -155,7 +162,7 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('class_id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=120), nullable=False),
-        sa.Column('weekday', sa.Enum('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', name='weekday_enum', create_type=False), nullable=False),
+        sa.Column('weekday', postgresql.ENUM('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO', name='weekday_enum', create_type=False), nullable=False),
         sa.Column('start_time', sa.Time(), nullable=False),
         sa.Column('end_time', sa.Time(), nullable=False),
         sa.Column('capacity', sa.Integer(), nullable=False),
@@ -194,9 +201,9 @@ def upgrade() -> None:
         sa.Column('assigned_by', sa.Integer(), nullable=False),
         sa.Column('start_date', sa.Date(), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=False),
-        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=True),
+        sa.Column('payment_method', postgresql.ENUM('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=True),
         sa.Column('amount_snapshot', sa.Numeric(precision=12, scale=2), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=now_func, nullable=False),
         sa.Column('period_yyyymm', sa.String(length=7), nullable=True),
         sa.ForeignKeyConstraint(['assigned_by'], ['users.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['membership_id'], ['memberships.id'], ondelete='CASCADE'),
@@ -210,7 +217,7 @@ def upgrade() -> None:
         'membership_prices',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('membership_id', sa.Integer(), nullable=False),
-        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=False),
+        sa.Column('payment_method', postgresql.ENUM('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=False),
         sa.Column('amount', sa.Numeric(precision=12, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['membership_id'], ['memberships.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
@@ -239,7 +246,7 @@ def upgrade() -> None:
         sa.Column('phone', sa.String(length=30), nullable=False),
         sa.Column('email', sa.String(length=255), nullable=False),
         sa.Column('source', sa.String(length=60), nullable=False),
-        sa.Column('status', sa.Enum('NUEVO', 'CONTACTADO', 'INTERESADO', 'INSCRIPTO', 'DESCARTADO', name='prospect_status', create_type=False), nullable=False),
+        sa.Column('status', postgresql.ENUM('NUEVO', 'CONTACTADO', 'INTERESADO', 'INSCRIPTO', 'DESCARTADO', name='prospect_status', create_type=False), nullable=False),
         sa.Column('interest_summary', sa.String(length=255), nullable=False),
         sa.Column('notes', sa.Text(), nullable=False),
         sa.Column('assigned_to_user_id', sa.Integer(), nullable=True),
@@ -261,7 +268,7 @@ def upgrade() -> None:
         sa.Column('professor_id', sa.Integer(), nullable=False),
         sa.Column('title', sa.String(length=180), nullable=False),
         sa.Column('notes', sa.String(length=2000), nullable=False),
-        sa.Column('routine_type', sa.Enum('FUNCIONAL', 'MUSCULACION', 'PERSONALIZADA', name='routine_type', create_type=False), nullable=False),
+        sa.Column('routine_type', postgresql.ENUM('FUNCIONAL', 'MUSCULACION', 'PERSONALIZADA', name='routine_type', create_type=False), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['professor_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
@@ -274,10 +281,10 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=False),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
-        sa.Column('kind', sa.Enum('GENERAL', 'COBRO', 'ASISTENCIA', 'TECNICO', 'COMERCIAL', name='followup_kind', create_type=False), nullable=False),
-        sa.Column('status', sa.Enum('PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'CANCELADO', name='followup_status', create_type=False), nullable=False),
-        sa.Column('priority', sa.Enum('BAJA', 'MEDIA', 'ALTA', 'URGENTE', name='followup_priority', create_type=False), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel', create_type=False), nullable=False),
+        sa.Column('kind', postgresql.ENUM('GENERAL', 'COBRO', 'ASISTENCIA', 'TECNICO', 'COMERCIAL', name='followup_kind', create_type=False), nullable=False),
+        sa.Column('status', postgresql.ENUM('PENDIENTE', 'EN_PROCESO', 'COMPLETADO', 'CANCELADO', name='followup_status', create_type=False), nullable=False),
+        sa.Column('priority', postgresql.ENUM('BAJA', 'MEDIA', 'ALTA', 'URGENTE', name='followup_priority', create_type=False), nullable=False),
+        sa.Column('channel', postgresql.ENUM('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel', create_type=False), nullable=False),
         sa.Column('title', sa.String(length=180), nullable=False),
         sa.Column('notes', sa.Text(), nullable=False),
         sa.Column('next_contact_date', sa.Date(), nullable=True),
@@ -308,7 +315,7 @@ def upgrade() -> None:
         'cash_movements',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('session_id', sa.Integer(), nullable=True),
-        sa.Column('entry_type', sa.Enum('INGRESO', 'EGRESO', name='cash_entry_type', create_type=False), nullable=False),
+        sa.Column('entry_type', postgresql.ENUM('INGRESO', 'EGRESO', name='cash_entry_type', create_type=False), nullable=False),
         sa.Column('category', sa.String(length=60), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=True),
         sa.Column('membership_assignment_id', sa.Integer(), nullable=True),
@@ -316,14 +323,14 @@ def upgrade() -> None:
         sa.Column('concept', sa.String(length=150), nullable=False),
         sa.Column('notes', sa.String(length=500), nullable=False),
         sa.Column('period_yyyymm', sa.String(length=7), nullable=True),
-        sa.Column('payment_method', sa.Enum('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=True),
+        sa.Column('payment_method', postgresql.ENUM('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'OTRO', name='payment_method', create_type=False), nullable=True),
         sa.Column('amount', sa.Numeric(precision=12, scale=2), nullable=False),
-        sa.Column('status', sa.Enum('PENDIENTE', 'PAGADO', 'CANCELADO', name='cash_payment_status', create_type=False), nullable=False),
+        sa.Column('status', postgresql.ENUM('PENDIENTE', 'PAGADO', 'CANCELADO', name='cash_payment_status', create_type=False), nullable=False),
         sa.Column('receipt_image_path', sa.String(length=255), nullable=True),
         sa.Column('receipt_note', sa.String(length=255), nullable=False),
-        sa.Column('movement_date', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('paid_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('movement_date', sa.DateTime(timezone=True), server_default=now_func, nullable=False),
+        sa.Column('paid_at', sa.DateTime(timezone=True), server_default=now_func, nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=now_func, nullable=False),
         sa.ForeignKeyConstraint(['created_by_id'], ['users.id'], ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['membership_assignment_id'], ['membership_assignments.id'], ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['session_id'], ['cash_sessions.id'], ondelete='SET NULL'),
@@ -345,7 +352,7 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('group_id', sa.Integer(), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=False),
-        sa.Column('status', sa.Enum('ACTIVO', 'INACTIVO', 'LISTA_ESPERA', 'CANCELADO', name='enrollment_status', create_type=False), nullable=False),
+        sa.Column('status', postgresql.ENUM('ACTIVO', 'INACTIVO', 'LISTA_ESPERA', 'CANCELADO', name='enrollment_status', create_type=False), nullable=False),
         sa.Column('notes', sa.Text(), nullable=False),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -362,14 +369,14 @@ def upgrade() -> None:
     op.create_table(
         'contact_conversations',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB', name='conversation_channel', create_type=False), nullable=False),
+        sa.Column('channel', postgresql.ENUM('WHATSAPP', 'INSTAGRAM', 'FACEBOOK', 'WEB', name='conversation_channel', create_type=False), nullable=False),
         sa.Column('phone', sa.String(length=30), nullable=False),
         sa.Column('external_chat_id', sa.String(length=180), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=True),
         sa.Column('prospect_id', sa.Integer(), nullable=True),
         sa.Column('followup_id', sa.Integer(), nullable=True),
-        sa.Column('conversation_type', sa.Enum('GENERAL', 'PROSPECTO', 'SOPORTE', 'COMERCIAL', name='conversation_type', create_type=False), nullable=False),
-        sa.Column('status', sa.Enum('NUEVA', 'BOT', 'HUMANO', 'CERRADA', name='conversation_status', create_type=False), nullable=False),
+        sa.Column('conversation_type', postgresql.ENUM('GENERAL', 'PROSPECTO', 'SOPORTE', 'COMERCIAL', name='conversation_type', create_type=False), nullable=False),
+        sa.Column('status', postgresql.ENUM('NUEVA', 'BOT', 'HUMANO', 'CERRADA', name='conversation_status', create_type=False), nullable=False),
         sa.Column('intent_last', sa.String(length=80), nullable=False),
         sa.Column('lead_temperature', sa.String(length=20), nullable=False),
         sa.Column('handoff_reason', sa.String(length=255), nullable=False),
@@ -380,7 +387,7 @@ def upgrade() -> None:
         sa.Column('assistant_paused', sa.Boolean(), nullable=False),
         sa.Column('assistant_paused_at', sa.DateTime(), nullable=True),
         sa.Column('assistant_paused_by_user_id', sa.Integer(), nullable=True),
-        sa.Column('commercial_stage', sa.Enum('NUEVO', 'CONTACTADO', 'CALIFICADO', 'PRESENTACION', 'NEGOCIACION', 'CIERRE_GANADO', 'CIERRE_PERDIDO', 'SEGUIMIENTO', name='commercial_stage', create_type=False), nullable=False),
+        sa.Column('commercial_stage', postgresql.ENUM('NUEVO', 'CONTACTADO', 'CALIFICADO', 'PRESENTACION', 'NEGOCIACION', 'CIERRE_GANADO', 'CIERRE_PERDIDO', 'SEGUIMIENTO', name='commercial_stage', create_type=False), nullable=False),
         sa.Column('commercial_stage_updated_at', sa.DateTime(), nullable=True),
         sa.Column('commercial_stage_note', sa.String(length=255), nullable=False),
         sa.ForeignKeyConstraint(['assigned_to_user_id'], ['users.id'], ondelete='SET NULL'),
@@ -409,8 +416,8 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('followup_id', sa.Integer(), nullable=False),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
-        sa.Column('action_type', sa.Enum('LLAMADA', 'WHATSAPP', 'EMAIL', 'NOTA', 'TAREA', 'OTRO', name='followup_action_type', create_type=False), nullable=False),
-        sa.Column('channel', sa.Enum('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel', create_type=False), nullable=True),
+        sa.Column('action_type', postgresql.ENUM('LLAMADA', 'WHATSAPP', 'EMAIL', 'NOTA', 'TAREA', 'OTRO', name='followup_action_type', create_type=False), nullable=False),
+        sa.Column('channel', postgresql.ENUM('WHATSAPP', 'TELEFONO', 'EMAIL', 'PRESENCIAL', name='followup_channel', create_type=False), nullable=True),
         sa.Column('summary', sa.String(length=255), nullable=False),
         sa.Column('payload_text', sa.Text(), nullable=False),
         sa.Column('external_ref', sa.String(length=180), nullable=False),
@@ -432,13 +439,13 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('assignment_id', sa.Integer(), nullable=False),
         sa.Column('student_id', sa.Integer(), nullable=False),
-        sa.Column('service', sa.Enum('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind', create_type=False), nullable=False),
+        sa.Column('service', postgresql.ENUM('FUNCIONAL', 'MUSCULACION', 'AMBOS', 'OTRO', name='service_kind', create_type=False), nullable=False),
         sa.Column('used_at', sa.Date(), nullable=False),
         sa.Column('used_at_time', sa.Time(), nullable=True),
         sa.Column('period_yyyymm', sa.String(length=7), nullable=False),
         sa.Column('notes', sa.String(length=255), nullable=False),
         sa.Column('created_by', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=now_func, nullable=False),
         sa.ForeignKeyConstraint(['assignment_id'], ['membership_assignments.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['created_by'], ['users.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['student_id'], ['users.id'], ondelete='CASCADE'),
@@ -493,7 +500,7 @@ def upgrade() -> None:
         'conversation_messages',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('conversation_id', sa.Integer(), nullable=False),
-        sa.Column('sender_type', sa.Enum('USER', 'CONTACT', 'SYSTEM', 'BOT', name='sender_type', create_type=False), nullable=False),
+        sa.Column('sender_type', postgresql.ENUM('USER', 'CONTACT', 'SYSTEM', 'BOT', name='sender_type', create_type=False), nullable=False),
         sa.Column('is_inbound', sa.Boolean(), nullable=False),
         sa.Column('message_text', sa.Text(), nullable=False),
         sa.Column('external_ref', sa.String(length=180), nullable=False),

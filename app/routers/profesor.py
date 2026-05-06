@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 
-from fastapi import APIRouter, Request, Depends, Form, Path as FPath
+from fastapi import APIRouter, Request, Depends, Form, Path as FPath, File, UploadFile, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -10,7 +10,6 @@ from sqlalchemy import select, func
 from ..db import get_db
 from ..deps import require_roles
 from ..models import User, Exercise, Routine, RoutineItem, RoutineAssignment, RoutineType, Role, ProfesorAlumno
-from ..services.routine_assignment_service import assign_routine_to_student
 
 from ..services.professor_query_service import (
     load_professor_active_assignments,
@@ -21,7 +20,6 @@ from ..services.professor_query_service import (
     load_professor_students,
 )
 
-from ..services.professor_query_service import load_professor_students
 
 from ..services.routine_assignment_service import assign_routine_to_student
 from ..services.professor_security_service import (
@@ -29,12 +27,41 @@ from ..services.professor_security_service import (
     load_professor_owned_student,
 )
 
+from ..services.exercise_video_service import (
+    build_private_video_response,
+    delete_private_exercise_video,
+    has_uploaded_file,
+    save_private_exercise_video,
+)
+
 router = APIRouter()
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-PROF_ONLY = ["PROFESOR"]
+PROF_ONLY = ["PROFESOR", "ADMINISTRADOR"]
+
+
+def is_admin_user(user: User) -> bool:
+    return user.role.value == "ADMINISTRADOR"
+
+
+def professor_scope_id(user: User) -> int | None:
+    """
+    PROFESOR: devuelve su id para filtrar datos propios.
+    ADMINISTRADOR: devuelve None para ver todo.
+    """
+    if is_admin_user(user):
+        return None
+    return user.id
+
+
+def can_manage_professor_resource(user: User, professor_id: int) -> bool:
+    """
+    ADMINISTRADOR puede gestionar cualquier recurso del módulo profesor.
+    PROFESOR solo puede gestionar recursos propios.
+    """
+    return is_admin_user(user) or professor_id == user.id
 
 
 # =========================
@@ -48,7 +75,7 @@ def exercises_list(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    items = load_professor_exercises(db, professor_id=me.id, q=q)
+    items = load_professor_exercises(db, professor_id=professor_scope_id(me), q=q)
 
     return templates.TemplateResponse(
         request,
@@ -63,7 +90,11 @@ def exercises_new_page(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    return templates.TemplateResponse(request,"prof_exercise_form.html", {"request": request, "me": me, "error": None, "item": None})
+    return templates.TemplateResponse(
+        request,
+        "prof_exercise_form.html",
+        {"request": request, "me": me, "error": None, "item": None},
+    )
 
 
 @router.post("/profesor/exercises/new")
@@ -73,19 +104,121 @@ def exercises_new(
     description: str = Form(""),
     muscle_group: str = Form(""),
     equipment: str = Form(""),
+    video_url: str = Form(""),
+    video_file: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
+    name_clean = name.strip()
+    if not name_clean:
+        return templates.TemplateResponse(
+            request,
+            "prof_exercise_form.html",
+            {"request": request, "me": me, "error": "El nombre del ejercicio es obligatorio.", "item": None},
+            status_code=400,
+        )
+
     e = Exercise(
         professor_id=me.id,
-        name=name.strip(),
+        name=name_clean,
         description=description.strip(),
         muscle_group=muscle_group.strip(),
         equipment=equipment.strip(),
+        video_url=video_url.strip() or None,
     )
+
     db.add(e)
+    db.flush()
+
+    if has_uploaded_file(video_file):
+        save_private_exercise_video(
+            db,
+            exercise=e,
+            upload=video_file,
+            replace_existing=True,
+        )
+
     db.commit()
     return RedirectResponse(url="/profesor/exercises", status_code=302)
+
+
+@router.get("/profesor/exercises/{exercise_id}/edit", response_class=HTMLResponse)
+def exercises_edit_page(
+    request: Request,
+    exercise_id: int,
+    db: Session = Depends(get_db),
+    me: User = Depends(require_roles(PROF_ONLY)),
+):
+    item = db.get(Exercise, exercise_id)
+    if (not item) or (not can_manage_professor_resource(me, item.professor_id)):
+        return RedirectResponse(url="/profesor/exercises", status_code=302)
+
+    return templates.TemplateResponse(
+        request,
+        "prof_exercise_form.html",
+        {"request": request, "me": me, "error": None, "item": item},
+    )
+
+
+@router.post("/profesor/exercises/{exercise_id}/edit")
+@router.post("/profesor/exercises/{exercise_id}/edit")
+def exercises_edit_save(
+    request: Request,
+    exercise_id: int,
+    name: str = Form(...),
+    description: str = Form(""),
+    muscle_group: str = Form(""),
+    equipment: str = Form(""),
+    video_url: str = Form(""),
+    video_file: UploadFile | None = File(None),
+    delete_video: str = Form(""),
+    db: Session = Depends(get_db),
+    me: User = Depends(require_roles(PROF_ONLY)),
+):
+    item = db.get(Exercise, exercise_id)
+    if (not item) or (not can_manage_professor_resource(me, item.professor_id)):
+        return RedirectResponse(url="/profesor/exercises", status_code=302)
+
+    name_clean = name.strip()
+    if not name_clean:
+        return templates.TemplateResponse(
+            request,
+            "prof_exercise_form.html",
+            {"request": request, "me": me, "error": "El nombre del ejercicio es obligatorio.", "item": item},
+            status_code=400,
+        )
+
+    item.name = name_clean
+    item.description = description.strip()
+    item.muscle_group = muscle_group.strip()
+    item.equipment = equipment.strip()
+    item.video_url = video_url.strip() or None
+
+    if delete_video == "1":
+        delete_private_exercise_video(item)
+
+    if has_uploaded_file(video_file):
+        save_private_exercise_video(
+            db,
+            exercise=item,
+            upload=video_file,
+            replace_existing=True,
+        )
+
+    db.commit()
+    return RedirectResponse(url="/profesor/exercises", status_code=302)
+
+@router.get("/profesor/exercises/{exercise_id}/video")
+def professor_exercise_video(
+    exercise_id: int,
+    db: Session = Depends(get_db),
+    me: User = Depends(require_roles(PROF_ONLY)),
+):
+    exercise = db.get(Exercise, exercise_id)
+    if (not exercise) or (not can_manage_professor_resource(me, exercise.professor_id)):
+        raise HTTPException(status_code=404, detail="Video no encontrado.")
+
+    return build_private_video_response(exercise)
 
 
 # =========================
@@ -98,7 +231,7 @@ def routines_list(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    routines = load_professor_routines(db, professor_id=me.id)
+    routines = load_professor_routines(db, professor_id=professor_scope_id(me))
 
     return templates.TemplateResponse(
         request,
@@ -147,7 +280,7 @@ def routine_detail(
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
     r = db.get(Routine, routine_id)
-    if (not r) or (r.professor_id != me.id):
+    if (not r) or (not can_manage_professor_resource(me, r.professor_id)):
         return RedirectResponse(url="/profesor/routines", status_code=302)
 
     # ✅ ACÁ VA (leer el parámetro err y armar el mensaje)
@@ -156,13 +289,20 @@ def routine_detail(
     if err == "asignada":
         error_msg = "No podés eliminar esta rutina porque está asignada a uno o más alumnos."
 
-    exercises = load_professor_exercises(db, professor_id=me.id)
+    exercises = load_professor_exercises(
+        db,
+        professor_id=professor_scope_id(me),
+    )
 
     items = db.scalars(
         select(RoutineItem).where(RoutineItem.routine_id == r.id).order_by(RoutineItem.order_index.asc())
     ).all()
 
-    students = load_professor_students(db, professor_id=me.id, q="")
+    students = load_professor_students(
+        db,
+        professor_id=professor_scope_id(me),
+        q="",
+    )
 
     return templates.TemplateResponse(
         request,
@@ -186,7 +326,7 @@ def routine_delete(
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
     r = db.get(Routine, routine_id)
-    if (not r) or (r.professor_id != me.id):
+    if (not r) or (not can_manage_professor_resource(me, r.professor_id)):
         return RedirectResponse(url="/profesor/routines", status_code=302)
 
     # ❌ Bloquear si está asignada a cualquier alumno (activa o histórica)
@@ -225,11 +365,11 @@ def routine_add_item(
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
     r = db.get(Routine, routine_id)
-    if (not r) or (r.professor_id != me.id):
+    if (not r) or (not can_manage_professor_resource(me, r.professor_id)):
         return RedirectResponse(url="/profesor/routines", status_code=302)
 
     ex = db.get(Exercise, exercise_id)
-    if (not ex) or (ex.professor_id != me.id):
+    if (not ex) or (not can_manage_professor_resource(me, ex.professor_id)):
         return RedirectResponse(url=f"/profesor/routines/{routine_id}", status_code=302)
 
     day_label_clean = day_label.strip()
@@ -273,7 +413,7 @@ def routine_item_edit_page(
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
     r = db.get(Routine, routine_id)
-    if (not r) or (r.professor_id != me.id):
+    if (not r) or (not can_manage_professor_resource(me, r.professor_id)):
         return RedirectResponse(url="/profesor/routines", status_code=302)
 
     it = db.get(RoutineItem, item_id)
@@ -281,9 +421,10 @@ def routine_item_edit_page(
         return RedirectResponse(url=f"/profesor/routines/{routine_id}", status_code=302)
 
     # ejercicios disponibles (del prof)
-    exercises = db.scalars(
-        select(Exercise).where(Exercise.professor_id == me.id).order_by(Exercise.name.asc())
-    ).all()
+    exercises = load_professor_exercises(
+        db,
+        professor_id=professor_scope_id(me),
+    )
 
     days = [f"Día {i}" for i in range(1, 8)]  # Día 1..Día 7
 
@@ -319,7 +460,7 @@ def routine_item_edit_save(
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
     r = db.get(Routine, routine_id)
-    if (not r) or (r.professor_id != me.id):
+    if (not r) or (not can_manage_professor_resource(me, r.professor_id)):
         return RedirectResponse(url="/profesor/routines", status_code=302)
 
     it = db.get(RoutineItem, item_id)
@@ -327,7 +468,7 @@ def routine_item_edit_save(
         return RedirectResponse(url=f"/profesor/routines/{routine_id}", status_code=302)
 
     ex = db.get(Exercise, exercise_id)
-    if (not ex) or (ex.professor_id != me.id):
+    if (not ex) or (not can_manage_professor_resource(me, ex.professor_id)):
         return RedirectResponse(url=f"/profesor/routines/{routine_id}", status_code=302)
 
     it.exercise_id = ex.id
@@ -349,7 +490,7 @@ def routine_item_delete(
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
     r = db.get(Routine, routine_id)
-    if (not r) or (r.professor_id != me.id):
+    if (not r) or (not can_manage_professor_resource(me, r.professor_id)):
         return RedirectResponse(url="/profesor/routines", status_code=302)
 
     it = db.get(RoutineItem, item_id)
@@ -373,11 +514,19 @@ def routine_assign(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    r = load_professor_owned_routine(db, professor_id=me.id, routine_id=routine_id)
+    r = load_professor_owned_routine(
+        db,
+        professor_id=professor_scope_id(me),
+        routine_id=routine_id,
+    )
     if not r:
         return RedirectResponse(url="/profesor/routines", status_code=302)
 
-    student = load_professor_owned_student(db, professor_id=me.id, student_id=student_id)
+    student = load_professor_owned_student(
+        db,
+        professor_id=professor_scope_id(me),
+        student_id=student_id,
+    )
     if not student:
         return RedirectResponse(url=f"/profesor/routines/{routine_id}", status_code=302)
 
@@ -409,11 +558,15 @@ def assignments_page(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    routines = load_professor_routines(db, professor_id=me.id)
+    routines = load_professor_routines(db, professor_id=professor_scope_id(me))
 
-    students = load_professor_students(db, professor_id=me.id, q="")
+    students = load_professor_students(
+        db,
+        professor_id=professor_scope_id(me),
+        q="",
+    )
 
-    active_assignments = load_professor_active_assignments(db, professor_id=me.id)
+    active_assignments = load_professor_active_assignments(db, professor_id=professor_scope_id(me))
 
     return templates.TemplateResponse(
         request,
@@ -439,11 +592,19 @@ def assignments_do(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    r = load_professor_owned_routine(db, professor_id=me.id, routine_id=routine_id)
+    r = load_professor_owned_routine(
+        db,
+        professor_id=professor_scope_id(me),
+        routine_id=routine_id,
+    )
     if not r:
         return RedirectResponse(url="/profesor/assignments", status_code=302)
 
-    student = load_professor_owned_student(db, professor_id=me.id, student_id=student_id)
+    student = load_professor_owned_student(
+        db,
+        professor_id=professor_scope_id(me),
+        student_id=student_id,
+    )
     if not student:
         return RedirectResponse(url="/profesor/assignments", status_code=302)
 
@@ -472,20 +633,30 @@ def deactivate_active_assignment(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    student = load_professor_owned_student(db, professor_id=me.id, student_id=student_id)
+    student = load_professor_owned_student(
+        db,
+        professor_id=professor_scope_id(me),
+        student_id=student_id,
+    )
     if not student:
         return RedirectResponse(url="/profesor/assignments", status_code=302)
 
-    a = db.scalars(
+    stmt = (
         select(RoutineAssignment)
+        .join(Routine, Routine.id == RoutineAssignment.routine_id)
         .where(
             RoutineAssignment.student_id == student_id,
-            RoutineAssignment.is_active == True,
+            RoutineAssignment.is_active.is_(True),
         )
         .order_by(RoutineAssignment.id.desc())
-    ).first()
+    )
 
-    if a and a.routine and a.routine.professor_id == me.id:
+    if not is_admin_user(me):
+        stmt = stmt.where(Routine.professor_id == me.id)
+
+    a = db.scalars(stmt).first()
+
+    if a:
         try:
             a.is_active = False
             db.commit()
@@ -502,17 +673,19 @@ def assignment_history(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    student = load_professor_owned_student(db, professor_id=me.id, student_id=student_id)
+    student = load_professor_owned_student(
+        db,
+        professor_id=professor_scope_id(me),
+        student_id=student_id,
+    )
     if not student:
         return RedirectResponse(url="/profesor/assignments", status_code=302)
 
-    all_assignments = db.scalars(
-        select(RoutineAssignment)
-        .where(RoutineAssignment.student_id == student_id)
-        .order_by(RoutineAssignment.id.desc())
-    ).all()
-
-    all_assignments = [a for a in all_assignments if a.routine and a.routine.professor_id == me.id]
+    assignments = load_professor_assignment_history(
+        db,
+        professor_id=professor_scope_id(me),
+        student_id=student_id,
+    )
 
     return templates.TemplateResponse(
         request,
@@ -521,7 +694,7 @@ def assignment_history(
             "request": request,
             "me": me,
             "student": student,
-            "assignments": all_assignments,
+            "assignments": assignments,
         },
     )
 
@@ -536,12 +709,12 @@ def mis_alumnos(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    alumnos = load_professor_students(db, professor_id=me.id, q=q)
-    routines = load_professor_routines(db, professor_id=me.id)
+    alumnos = load_professor_students(db, professor_id=professor_scope_id(me), q=q)
+    routines = load_professor_routines(db, professor_id=professor_scope_id(me))
 
     active_by_student = load_professor_active_assignments_map(
         db,
-        professor_id=me.id,
+        professor_id=professor_scope_id(me),
         student_ids=[a.id for a in alumnos],
     )
 
@@ -567,30 +740,30 @@ def asignar_rutina_a_mi_alumno(
     db: Session = Depends(get_db),
     me: User = Depends(require_roles(PROF_ONLY)),
 ):
-    # verificar que el alumno sea "a cargo"
-    link = db.scalars(
-        select(ProfesorAlumno).where(
-            ProfesorAlumno.profesor_id == me.id,
-            ProfesorAlumno.alumno_id == student_id
-        )
-    ).first()
-    if not link:
+    student = load_professor_owned_student(
+        db,
+        professor_id=professor_scope_id(me),
+        student_id=student_id,
+    )
+    if not student:
         return RedirectResponse(url="/profesor/alumnos", status_code=302)
 
-    # validar rutina del prof
-    r = db.get(Routine, routine_id)
-    if (not r) or (r.professor_id != me.id):
+    r = load_professor_owned_routine(
+        db,
+        professor_id=professor_scope_id(me),
+        routine_id=routine_id,
+    )
+    if not r:
         return RedirectResponse(url="/profesor/alumnos", status_code=302)
 
     sd = None
     if start_date.strip():
         sd = datetime.strptime(start_date.strip(), "%Y-%m-%d").date()
 
-    # desactivar activa anterior del alumno (solo una activa total)
     assign_routine_to_student(
         db,
         routine_id=r.id,
-        student_id=student_id,
+        student_id=student.id,
         assigned_by=me.id,
         start_date=sd,
     )

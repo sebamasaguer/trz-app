@@ -8,9 +8,11 @@
   .trz-sub{margin:0 0 14px;opacity:.8}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media (max-width: 760px){.grid{grid-template-columns:1fr}}
+  .full{grid-column:1 / -1}
   .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:0 0 6px}
   .inp, .txt{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.12);color:inherit}
   .txt{min-height:110px;resize:vertical}
+  .hint{font-size:12px;opacity:.72;margin-top:6px;line-height:1.35}
   .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
   .btn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:inherit;text-decoration:none;cursor:pointer}
   .btn:hover{background:rgba(255,255,255,.12)}
@@ -19,30 +21,73 @@
 
 <div class="trz-wrap">
   <div class="trz-card">
-    <h1 class="trz-title">Nuevo ejercicio</h1>
-    <p class="trz-sub">Completá los datos básicos. Después lo podés usar en rutinas.</p>
+    <h1 class="trz-title">{% if item %}Editar ejercicio{% else %}Nuevo ejercicio{% endif %}</h1>
+    <p class="trz-sub">
+      Completá los datos básicos. Después lo podés usar en rutinas.
+      {% if item %}Los cambios impactan en las rutinas donde este ejercicio ya esté cargado.{% endif %}
+    </p>
 
     {% if error %}
       <div class="err">{{ error }}</div>
     {% endif %}
 
-    <form method="post" action="/profesor/exercises/new">
+    <form method="post" enctype="multipart/form-data" action="{% if item %}/profesor/exercises/{{ item.id }}/edit{% else %}/profesor/exercises/new{% endif %}">
       <div class="grid">
         <div>
           <div class="lbl">Nombre</div>
-          <input class="inp" name="name" required placeholder="Ej: Press banca" />
+          <input class="inp" name="name" required placeholder="Ej: Press banca" value="{{ item.name if item else '' }}" />
         </div>
         <div>
           <div class="lbl">Grupo muscular</div>
-          <input class="inp" name="muscle_group" placeholder="Ej: Pecho" />
+          <input class="inp" name="muscle_group" placeholder="Ej: Pecho" value="{{ item.muscle_group if item else '' }}" />
         </div>
         <div>
           <div class="lbl">Equipo</div>
-          <input class="inp" name="equipment" placeholder="Ej: Barra / Mancuernas / Máquina" />
+          <input class="inp" name="equipment" placeholder="Ej: Barra / Mancuernas / Máquina" value="{{ item.equipment if item else '' }}" />
         </div>
         <div>
           <div class="lbl">Descripción</div>
-          <input class="inp" name="description" placeholder="Ej: Técnica / tips / ejecución" />
+          <input class="inp" name="description" placeholder="Ej: Técnica / tips / ejecución" value="{{ item.description if item else '' }}" />
+        </div>
+        <div class="full">
+          <div class="lbl">Video URL</div>
+          <input class="inp" name="video_url" type="url" maxlength="500" placeholder="https://www.youtube.com/watch?v=..." value="{{ item.video_url if item and item.video_url else '' }}" />
+          <div class="hint">
+            Pegá un enlace de YouTube, Vimeo, Cloudinary, S3 o un archivo servido desde /static/.
+            Por ahora se guarda como URL para evitar subir videos pesados a la base de datos.
+          </div>
+        </div>
+        <div class="full">
+          <div class="lbl">Video privado TRZ</div>
+
+          {% if item and item.video_path %}
+            <div class="hint" style="margin-bottom:8px;">
+              Video privado cargado:
+              <strong>{{ item.video_original_filename or "video cargado" }}</strong>
+              {% if item.video_size_bytes %}
+                · {{ (item.video_size_bytes / 1024 / 1024)|round(2) }} MB
+              {% endif %}
+            </div>
+
+            <div class="row" style="margin-top:0;margin-bottom:8px;">
+              <a class="btn" href="/profesor/exercises/{{ item.id }}/video" target="_blank" rel="noopener">
+                ▶️ Ver video privado
+              </a>
+
+              <label class="btn" style="cursor:pointer;">
+                <input type="checkbox" name="delete_video" value="1" style="margin-right:6px;">
+                Eliminar video privado
+              </label>
+            </div>
+          {% endif %}
+
+          <input class="inp" name="video_file" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska,.mp4,.webm,.mov,.avi,.mkv" />
+
+          <div class="hint">
+            Este video queda guardado en el servidor y solo puede verse dentro del sistema TRZ.
+            Podés subir MP4, MOV, WebM, AVI o MKV. El sistema lo convierte automáticamente a MP4 compatible con Android/iPhone.
+            Tamaño máximo: 500 MB.
+          </div>
         </div>
       </div>
 

@@ -112,16 +112,13 @@ def _override_prof_auth(fake_user):
                 app.dependency_overrides[call] = lambda fake_user=fake_user: fake_user
 
 
-def test_admin_cannot_open_profesor_home():
+def test_admin_can_open_profesor_home():
     app.dependency_overrides[get_current_user] = lambda: _fake_admin()
     client = TestClient(app)
 
     response = client.get("/profesor", follow_redirects=False)
 
-    assert response.status_code == 302
-    assert response.headers["location"] == "/login"
-
-    app.dependency_overrides.clear()
+    assert response.status_code == 200
 
 
 def test_professor_cannot_assign_routine_to_unlinked_student():

@@ -507,7 +507,7 @@
             </li>
           {% endif %}
 
-            {% if me.role.value == "PROFESOR" %}
+            {% if me.role.value in ["PROFESOR", "ADMINISTRADOR"] %}
               <li class="nav-item dropdown">
                 <a
                   class="nav-link dropdown-toggle {% if path.startswith('/profesor/') %}active{% endif %}"

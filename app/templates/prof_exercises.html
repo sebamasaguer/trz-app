@@ -17,6 +17,7 @@
   .trz-td{padding:12px 10px;vertical-align:top}
   .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14)}
   .muted{opacity:.75}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 
 <div class="trz-wrap">
@@ -41,7 +42,9 @@
           <th>Nombre</th>
           <th>Grupo / Equipo</th>
           <th>Descripción</th>
+          <th>Video</th>
           <th>Creado</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -62,12 +65,30 @@
               <div class="muted">{{ e.description or "—" }}</div>
             </td>
             <td class="trz-td">
+              {% if e.video_path %}
+                <a class="trz-btn" href="/profesor/exercises/{{ e.id }}/video" target="_blank" rel="noopener">
+                  🔒 Video privado
+                </a>
+              {% elif e.video_url %}
+                <a class="trz-btn" href="{{ e.video_url }}" target="_blank" rel="noopener">
+                  ▶️ Ver video
+                </a>
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td class="trz-td">
               <div class="muted">{{ e.created_at }}</div>
+            </td>
+            <td class="trz-td">
+              <div class="actions">
+                <a class="trz-btn" href="/profesor/exercises/{{ e.id }}/edit">✏️ Editar</a>
+              </div>
             </td>
           </tr>
         {% else %}
           <tr>
-            <td colspan="4" class="trz-td muted">No hay ejercicios todavía. Creá el primero con “Nuevo ejercicio”.</td>
+            <td colspan="6" class="trz-td muted">No hay ejercicios todavía. Creá el primero con “Nuevo ejercicio”.</td>
           </tr>
         {% endfor %}
       </tbody>

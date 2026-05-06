@@ -4,9 +4,6 @@ import enum
 class RoutineType(str, enum.Enum):
     DIAS = "DIAS"
     SEMANAS = "SEMANAS"
-    FUNCIONAL = "FUNCIONAL"
-    MUSCULACION = "MUSCULACION"
-    PERSONALIZADA = "PERSONALIZADA"
 
 
 class Role(str, enum.Enum):
@@ -14,8 +11,6 @@ class Role(str, enum.Enum):
     ADMINISTRATIVO = "ADMINISTRATIVO"
     PROFESOR = "PROFESOR"
     ALUMNO = "ALUMNO"
-    ADMIN = "ADMIN"
-    RECEPCION = "RECEPCION"
 
 
 class MembershipKind(str, enum.Enum):
@@ -23,25 +18,17 @@ class MembershipKind(str, enum.Enum):
     MUSCULACION = "MUSCULACION"
     COMBINACION = "COMBINACION"
     CLASE_SUELTA = "CLASE_SUELTA"
-    MENSUAL = "MENSUAL"
-    QUINCENAL = "QUINCENAL"
-    CLASES = "CLASES"
-    OTRO = "OTRO"
 
 
 class PaymentMethod(str, enum.Enum):
     LISTA = "LISTA"
     EFECTIVO = "EFECTIVO"
     TRANSFERENCIA = "TRANSFERENCIA"
-    TARJETA = "TARJETA"
-    OTRO = "OTRO"
 
 
 class ServiceKind(str, enum.Enum):
     FUNCIONAL = "FUNCIONAL"
     MUSCULACION = "MUSCULACION"
-    AMBOS = "AMBOS"
-    OTRO = "OTRO"
 
 
 class CashEntryType(str, enum.Enum):
@@ -53,8 +40,6 @@ class CashPaymentStatus(str, enum.Enum):
     PENDIENTE = "PENDIENTE"
     ACREDITADO = "ACREDITADO"
     ANULADO = "ANULADO"
-    PAGADO = "PAGADO"
-    CANCELADO = "CANCELADO"
 
 
 class CashSessionStatus(str, enum.Enum):
@@ -81,22 +66,12 @@ class CommercialStage(str, enum.Enum):
     REACTIVADO = "REACTIVADO"
     CERRADO = "CERRADO"
     PERDIDO = "PERDIDO"
-    CONTACTADO = "CONTACTADO"
-    PRESENTACION = "PRESENTACION"
-    NEGOCIACION = "NEGOCIACION"
-    CIERRE_GANADO = "CIERRE_GANADO"
-    CIERRE_PERDIDO = "CIERRE_PERDIDO"
-    SEGUIMIENTO = "SEGUIMIENTO"
 
 
 class FollowupKind(str, enum.Enum):
     MOROSIDAD = "MOROSIDAD"
     INACTIVIDAD = "INACTIVIDAD"
     GENERAL = "GENERAL"
-    COBRO = "COBRO"
-    ASISTENCIA = "ASISTENCIA"
-    TECNICO = "TECNICO"
-    COMERCIAL = "COMERCIAL"
 
 
 class FollowupStatus(str, enum.Enum):
@@ -105,9 +80,6 @@ class FollowupStatus(str, enum.Enum):
     RESPONDIO = "RESPONDIO"
     REACTIVADO = "REACTIVADO"
     DESCARTADO = "DESCARTADO"
-    EN_PROCESO = "EN_PROCESO"
-    COMPLETADO = "COMPLETADO"
-    CANCELADO = "CANCELADO"
 
 
 class FollowupPriority(str, enum.Enum):
@@ -115,7 +87,6 @@ class FollowupPriority(str, enum.Enum):
     MEDIA = "MEDIA"
     ALTA = "ALTA"
     CRITICA = "CRITICA"
-    URGENTE = "URGENTE"
 
 
 class FollowupChannel(str, enum.Enum):
@@ -124,14 +95,12 @@ class FollowupChannel(str, enum.Enum):
     LLAMADA = "LLAMADA"
     PRESENCIAL = "PRESENCIAL"
     OTRO = "OTRO"
-    TELEFONO = "TELEFONO"
 
 
 class MessageTemplateChannel(str, enum.Enum):
     WHATSAPP = "WHATSAPP"
     EMAIL = "EMAIL"
     GENERAL = "GENERAL"
-    SMS = "SMS"
 
 
 class FollowupActionType(str, enum.Enum):
@@ -142,10 +111,6 @@ class FollowupActionType(str, enum.Enum):
     RECORDATORIO = "RECORDATORIO"
     CAMBIO_ESTADO = "CAMBIO_ESTADO"
     NOTA = "NOTA"
-    WHATSAPP = "WHATSAPP"
-    EMAIL = "EMAIL"
-    TAREA = "TAREA"
-    OTRO = "OTRO"
 
 
 class ProspectStatus(str, enum.Enum):
@@ -155,8 +120,6 @@ class ProspectStatus(str, enum.Enum):
     DERIVADO = "DERIVADO"
     CERRADO = "CERRADO"
     DESCARTADO = "DESCARTADO"
-    CONTACTADO = "CONTACTADO"
-    INSCRIPTO = "INSCRIPTO"
 
 
 class ConversationType(str, enum.Enum):
@@ -164,8 +127,6 @@ class ConversationType(str, enum.Enum):
     NUEVO_PROSPECTO = "NUEVO_PROSPECTO"
     SOPORTE = "SOPORTE"
     GENERAL = "GENERAL"
-    PROSPECTO = "PROSPECTO"
-    COMERCIAL = "COMERCIAL"
 
 
 class ConversationStatus(str, enum.Enum):
@@ -173,9 +134,6 @@ class ConversationStatus(str, enum.Enum):
     EN_AUTOMATICO = "EN_AUTOMATICO"
     DERIVADA_A_HUMANO = "DERIVADA_A_HUMANO"
     CERRADA = "CERRADA"
-    NUEVA = "NUEVA"
-    BOT = "BOT"
-    HUMANO = "HUMANO"
 
 
 class SenderType(str, enum.Enum):
@@ -184,15 +142,11 @@ class SenderType(str, enum.Enum):
     ALUMNO = "ALUMNO"
     PROSPECTO = "PROSPECTO"
     SISTEMA = "SISTEMA"
-    USER = "USER"
-    CONTACT = "CONTACT"
-    SYSTEM = "SYSTEM"
 
 
 class ClassStatus(str, enum.Enum):
     ACTIVA = "ACTIVA"
     INACTIVA = "INACTIVA"
-    CANCELADA = "CANCELADA"
 
 
 class Weekday(str, enum.Enum):
@@ -208,21 +162,3 @@ class Weekday(str, enum.Enum):
 class EnrollmentStatus(str, enum.Enum):
     ACTIVA = "ACTIVA"
     CANCELADA = "CANCELADA"
-    ACTIVO = "ACTIVO"
-    INACTIVO = "INACTIVO"
-    LISTA_ESPERA = "LISTA_ESPERA"
-
-
-class TemplateFollowupKind(str, enum.Enum):
-    GENERAL = "GENERAL"
-    RECORDATORIO_PAGO = "RECORDATORIO_PAGO"
-    BIENVENIDA = "BIENVENIDA"
-    REACTIVACION = "REACTIVACION"
-    PROSPECTO = "PROSPECTO"
-
-
-class ConversationChannel(str, enum.Enum):
-    WHATSAPP = "WHATSAPP"
-    INSTAGRAM = "INSTAGRAM"
-    FACEBOOK = "FACEBOOK"
-    WEB = "WEB"

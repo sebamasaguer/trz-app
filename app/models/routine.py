@@ -2,6 +2,7 @@ from datetime import date, datetime
 from app.utils.datetime_utils import utcnow_naive
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Date,
     DateTime,
@@ -32,6 +33,16 @@ class Exercise(Base):
     description: Mapped[str] = mapped_column(String(1000), default="")
     muscle_group: Mapped[str] = mapped_column(String(120), default="")
     equipment: Mapped[str] = mapped_column(String(120), default="")
+
+    # Link externo opcional: YouTube, Vimeo, Cloudinary, etc.
+    video_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    # Video privado subido al servidor.
+    video_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    video_original_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    video_content_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    video_size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow_naive)
 
     professor = relationship("User", lazy="joined")

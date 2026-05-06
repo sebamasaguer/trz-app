@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime, date, time as dtime
 from calendar import monthrange
 
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Request, Depends, Form, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, selectinload, joinedload
@@ -29,8 +29,11 @@ from ..models import (
     ClassGroup,
     ClassEnrollment,
     EnrollmentStatus,
+    Exercise,
 )
 from ..security import qr_verify_payload
+
+from ..services.exercise_video_service import build_private_video_response
 
 
 router = APIRouter()
@@ -602,3 +605,30 @@ def alumno_app(
             "banner": banner,
         },
     )
+
+@router.get("/alumno/exercises/{exercise_id}/video")
+def alumno_exercise_video(
+    exercise_id: int,
+    db: Session = Depends(get_db),
+    me=Depends(require_roles(ALUM_ONLY)),
+):
+    exercise = db.get(Exercise, exercise_id)
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Video no encontrado.")
+
+    allowed = db.scalar(
+        select(RoutineItem.id)
+        .join(Routine, Routine.id == RoutineItem.routine_id)
+        .join(RoutineAssignment, RoutineAssignment.routine_id == Routine.id)
+        .where(
+            RoutineItem.exercise_id == exercise_id,
+            RoutineAssignment.student_id == me.id,
+            RoutineAssignment.is_active.is_(True),
+        )
+        .limit(1)
+    )
+
+    if not allowed:
+        raise HTTPException(status_code=404, detail="Video no encontrado.")
+
+    return build_private_video_response(exercise)

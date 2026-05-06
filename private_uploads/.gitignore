@@ -1,0 +1,4 @@
+@"
+*
+!.gitignore
+"@ | Set-Content -Encoding UTF8 private_uploads\.gitignore

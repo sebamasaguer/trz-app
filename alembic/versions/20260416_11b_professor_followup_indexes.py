@@ -6,7 +6,6 @@ Create Date: 2026-04-16
 """
 
 from alembic import op
-from sqlalchemy import inspect
 
 
 revision = "20260416_11b"
@@ -16,64 +15,56 @@ depends_on = None
 
 
 def upgrade():
-    bind = op.get_bind()
-    inspector = inspect(bind)
-
-    def create_index_if_not_exists(index_name, table_name, columns, unique=False):
-        existing_indexes = [idx["name"] for idx in inspector.get_indexes(table_name)]
-        if index_name not in existing_indexes:
-            op.create_index(index_name, table_name, columns, unique=unique)
-
-    create_index_if_not_exists(
+    op.create_index(
         "ix_users_role_is_active_last_name_first_name_id",
         "users",
         ["role", "is_active", "last_name", "first_name", "id"],
         unique=False,
     )
 
-    create_index_if_not_exists(
+    op.create_index(
         "ix_message_templates_active_kind_channel_id",
         "message_templates",
         ["is_active", "kind", "channel", "id"],
         unique=False,
     )
 
-    create_index_if_not_exists(
+    op.create_index(
         "ix_exercises_professor_name_id",
         "exercises",
         ["professor_id", "name", "id"],
         unique=False,
     )
 
-    create_index_if_not_exists(
+    op.create_index(
         "ix_routines_professor_id_id",
         "routines",
         ["professor_id", "id"],
         unique=False,
     )
 
-    create_index_if_not_exists(
+    op.create_index(
         "ix_routine_items_routine_day_weekday_order",
         "routine_items",
         ["routine_id", "day_label", "weekday", "order_index"],
         unique=False,
     )
 
-    create_index_if_not_exists(
+    op.create_index(
         "ix_routine_assignments_student_id_id",
         "routine_assignments",
         ["student_id", "id"],
         unique=False,
     )
 
-    create_index_if_not_exists(
+    op.create_index(
         "ix_routine_assignments_routine_active_id",
         "routine_assignments",
         ["routine_id", "is_active", "id"],
         unique=False,
     )
 
-    create_index_if_not_exists(
+    op.create_index(
         "ix_profesor_alumnos_profesor_id_id",
         "profesor_alumnos",
         ["profesor_id", "id"],

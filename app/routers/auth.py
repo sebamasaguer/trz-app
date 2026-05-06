@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]  # .../app
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 ADMIN_PANEL = {"ADMINISTRADOR", "ADMINISTRATIVO"}
-PROF_ONLY = ["PROFESOR"]
+PROF_ONLY = ["PROFESOR", "ADMINISTRADOR"]
 ALUM_ONLY = ["ALUMNO"]
 
 

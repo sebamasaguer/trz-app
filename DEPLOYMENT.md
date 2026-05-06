@@ -11,10 +11,18 @@ La aplicación es un sistema de gestión (TRZ FUNCIONAL) desarrollado con las si
 - **Migraciones:** Alembic.
 - **Autenticación:** JWT (JSON Web Tokens) y cookies.
 - **Dependencias:** Gestionadas vía `requirements.txt`.
-- **Estructura:**
-    - `app/`: Contiene el núcleo de la aplicación (routers, modelos, esquemas, servicios).
-    - `alembic/`: Contiene los scripts de migración de la base de datos.
-    - `static/` y `templates/`: Archivos estáticos y plantillas Jinja2 para el frontend.
+- **Estructura Detallada:**
+    - `app/`:
+        - `core/`: Configuración global (`config.py`), logging y seguridad.
+        - `models/`: Modelos de base de datos SQLAlchemy y enums.
+        - `schemas/`: Esquemas Pydantic para validación de datos.
+        - `repositories/`: Patrón Repository para el acceso a datos.
+        - `services/`: Lógica de negocio centralizada.
+        - `routers/`: Definición de endpoints de la API organizados por módulos (auth, admin, alumnos, profesores, etc.).
+        - `templates/` y `static/`: Frontend basado en Jinja2 y archivos estáticos.
+    - `alembic/`: Scripts de migración de base de datos.
+    - `scripts/`: Scripts de utilidad adicionales.
+    - `tests/`: Suite de pruebas (unitarias e integrales).
 
 ### Puntos clave para el despliegue:
 - La aplicación requiere una base de datos PostgreSQL.
@@ -56,11 +64,13 @@ Ve a la pestaña **"Environment"** de tu aplicación en Dokploy y agrega las sig
 | :--- | :--- |
 | `ENV` | `production` |
 | `DATABASE_URL` | *La URL de conexión de PostgreSQL del Paso 2* |
-| `JWT_SECRET` | *Una cadena larga y aleatoria* |
+| `JWT_SECRET` | *Una cadena larga y aleatoria (min 16 chars)* |
 | `QR_SECRET` | *Una cadena larga y aleatoria* |
 | `APP_NAME` | `TRZ FUNCIONAL` |
 | `COOKIE_SECURE` | `True` (si usas HTTPS) |
 | `APP_BASE_URL` | `https://tu-dominio.com` |
+| `OPENAI_API_KEY` | *Tu clave de API de OpenAI (opcional)* |
+| `N8N_FOLLOWUP_WEBHOOK_URL` | *Webhook para seguimientos (opcional)* |
 
 ### Paso 5: Migraciones y Seed (Opcional/Inicial)
 La aplicación está configurada para ejecutar las migraciones automáticamente al iniciar el contenedor mediante el archivo `entrypoint.sh`.

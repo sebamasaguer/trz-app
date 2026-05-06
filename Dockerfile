@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Ensure entrypoint is executable
-RUN chmod +x entrypoint.sh
+# Ensure entrypoint is executable and has correct line endings
+RUN sed -i 's/\r//' entrypoint.sh && chmod +x entrypoint.sh
 
 # Expose port
 EXPOSE 8000

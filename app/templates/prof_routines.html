@@ -7,14 +7,37 @@
   .trz-title{margin:0;font-size:22px;font-weight:800}
   .trz-sub{margin:4px 0 0;opacity:.8}
   .trz-card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:16px;padding:14px}
-  .btn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .btn{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
   .btn:hover{background:rgba(255,255,255,.12)}
   .grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:12px}
   @media (max-width: 980px){.grid{grid-template-columns:1fr 1fr}}
   @media (max-width: 680px){.grid{grid-template-columns:1fr}}
-  .card{border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.10);border-radius:16px;padding:14px}
+  .routine-card{border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.10);border-radius:16px;padding:14px}
   .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14)}
   .muted{opacity:.75}
+  .routine-actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+
+  @media (max-width: 768px){
+    .trz-wrap{padding:10px;}
+    .trz-head{flex-direction:column;align-items:stretch;}
+    .trz-head > div:last-child{
+      flex-direction:column;
+      width:100%;
+    }
+    .trz-head .btn,
+    .routine-card .btn{
+      width:100%;
+      justify-content:center;
+    }
+    .routine-actions{
+      flex-direction:column;
+      width:100%;
+    }
+    .routine-actions form{
+      width:100%;
+      margin:0 !important;
+    }
+  }
 </style>
 
 <div class="trz-wrap">
@@ -23,18 +46,19 @@
       <h1 class="trz-title">Rutinas</h1>
       <p class="trz-sub">Creá rutinas por días o por semanas y asignalas a alumnos.</p>
     </div>
+
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn" href="/profesor/routines/new">➕ Nueva rutina</a>
-        <a class="btn" href="/profesor/exercises">🏋️ Ejercicios</a>
-        <a class="btn" href="/profesor/assignments">🧩 Asignaciones</a>
-        <a class="btn" href="/profesor/alumnos">👥 Mis alumnos</a>
+      <a class="btn" href="/profesor/routines/new">➕ Nueva rutina</a>
+      <a class="btn" href="/profesor/exercises">🏋️ Ejercicios</a>
+      <a class="btn" href="/profesor/assignments">🧩 Asignaciones</a>
+      <a class="btn" href="/profesor/alumnos">👥 Mis alumnos</a>
     </div>
   </div>
 
   <div class="trz-card">
     <div class="grid">
       {% for r in routines %}
-        <div class="card">
+        <div class="routine-card">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
             <div>
               <div style="font-weight:900;font-size:16px">{{ r.title }}</div>
@@ -49,12 +73,16 @@
             <div class="muted" style="margin-top:10px">Sin notas.</div>
           {% endif %}
 
-          <div style="margin-top:12px">
+          <div class="routine-actions">
             <a class="btn" href="/profesor/routines/{{ r.id }}">Abrir</a>
-            <form method="post" action="/profesor/routines/{{ r.id }}/delete"
-                onsubmit="return confirm('¿Eliminar la rutina \"{{ r.title }}\"? Se borrarán también sus ejercicios y asignaciones.');"
-                style="display:inline-block; margin-left:.5rem;">
-            <button class="btn btn-outline-danger">Eliminar</button>
+
+            <form
+              method="post"
+              action="/profesor/routines/{{ r.id }}/delete"
+              class="js-delete-routine"
+              data-title="{{ r.title }}"
+            >
+              <button class="btn btn-outline-danger" type="submit">Eliminar</button>
             </form>
           </div>
         </div>
@@ -64,5 +92,19 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".js-delete-routine").forEach((form) => {
+      form.addEventListener("submit", (event) => {
+        const title = form.getAttribute("data-title") || "esta rutina";
+        const ok = confirm(`¿Eliminar la rutina "${title}"? Se borrarán también sus ejercicios y asignaciones.`);
+        if (!ok) {
+          event.preventDefault();
+        }
+      });
+    });
+  });
+</script>
 
 {% endblock %}

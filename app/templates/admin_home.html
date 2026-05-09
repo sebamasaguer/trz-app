@@ -190,6 +190,48 @@
     gap:8px;
     flex-wrap:wrap;
   }
+  @media (max-width: 768px){
+  .wrap{padding:10px;}
+  .hero{flex-direction:column;}
+  .top-actions{
+    flex-direction:column;
+    width:100%;
+  }
+  .top-actions .btn{
+    width:100%;
+    justify-content:center;
+  }
+
+  .cardx{
+    padding:12px;
+    border-radius:16px;
+  }
+
+  .kpi-value{
+    font-size:28px;
+  }
+
+  .bucket-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .mini-table{
+    min-width:520px;
+  }
+
+  .chart-box{
+    overflow-x:auto;
+  }
+
+  .actions-row{
+    flex-direction:column;
+  }
+
+  .actions-row .btn{
+    width:100%;
+    justify-content:center;
+  }
+}
 </style>
 
 <div class="wrap">

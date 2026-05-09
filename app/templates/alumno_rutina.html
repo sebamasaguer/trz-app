@@ -123,6 +123,58 @@
     border-radius: 10px;
   }
   .accordion-button{ font-weight:800; }
+  @media (max-width: 768px){
+  .container{
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  .page-title{
+    font-size:1.35rem;
+  }
+
+  .routine-head{
+    padding:.85rem;
+  }
+
+  .kpi{
+    width:100%;
+  }
+
+  .ex-card{
+    padding:.75rem;
+  }
+
+  .ex-kpis{
+    gap:.4rem;
+  }
+
+  .chip{
+    font-size:.78rem;
+  }
+
+  .video-btn{
+    width:100%;
+    justify-content:center;
+  }
+
+  .private-video{
+    width:100%;
+    max-height:280px;
+  }
+
+  .accordion-body{
+    padding:.75rem;
+  }
+
+  .d-flex.gap-2{
+    width:100%;
+  }
+
+  .d-flex.gap-2 .btn{
+    width:100%;
+  }
+}
 </style>
 
 <div class="container py-3">
@@ -318,10 +370,14 @@
                                       🔒 Abrir video TRZ
                                     </a>
 
-                                    <video class="private-video" controls preload="metadata">
-                                      <source src="/alumno/exercises/{{ it.exercise.id }}/video" type="{{ it.exercise.video_content_type or 'video/mp4' }}">
-                                      Tu navegador no puede reproducir este video.
-                                    </video>
+                                    <video
+                                      class="private-video"
+                                      controls
+                                      preload="metadata"
+                                      playsinline
+                                      webkit-playsinline
+                                      controlsList="nodownload"
+                                    >
                                   </div>
                                 {% elif it.exercise.video_url %}
                                   <div class="video-row">

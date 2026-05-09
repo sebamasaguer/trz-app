@@ -1,6 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+  @media (max-width: 768px){
+    .container-fluid{
+      padding-left:10px !important;
+      padding-right:10px !important;
+    }
+
+    .d-flex.gap-2{
+      width:100%;
+    }
+
+    .d-flex.gap-2 .btn{
+      width:100%;
+      justify-content:center;
+    }
+
+    .card-body{
+      padding:12px;
+    }
+
+    form.row .col-md-2,
+    form.row .col-md-3,
+    form.row .col-md-5,
+    form.row .col-md-7{
+      width:100%;
+    }
+
+    .table-responsive table{
+      min-width:850px;
+    }
+  }
+</style>
+
 <div class="container-fluid" style="max-width:1100px">
   <div class="d-flex align-items-end justify-content-between flex-wrap gap-2 mb-3">
     <div>

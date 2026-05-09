@@ -42,3 +42,4 @@ alembic==1.13.1
 sqlalchemy
 psycopg2-binary
 Mako==1.3.2
+

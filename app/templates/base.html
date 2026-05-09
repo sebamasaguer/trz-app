@@ -351,6 +351,144 @@
         width: 100%;
       }
     }
+    /* ================================
+   TRZ MOBILE RESPONSIVE GLOBAL
+================================ */
+
+html, body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+img, video, iframe{
+  max-width:100%;
+}
+
+main.container{
+  width:100%;
+  padding-left:16px;
+  padding-right:16px;
+}
+
+.table-responsive{
+  width:100%;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch;
+}
+
+.table-responsive table{
+  min-width:900px;
+}
+
+.trz-mobile-scroll{
+  width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.trz-mobile-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+@media (max-width: 768px){
+  main.container{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  h1, .hero h1{
+    font-size:28px !important;
+    line-height:1.15;
+  }
+
+  h2{
+    font-size:22px !important;
+  }
+
+  h3{
+    font-size:20px !important;
+  }
+
+  .navbar{
+    min-height:auto;
+  }
+
+  .navbar-brand{
+    font-size:1rem;
+  }
+
+  .dropdown-menu{
+    width:100%;
+    box-shadow:none;
+  }
+
+  .user-pill{
+    align-items:flex-start;
+  }
+
+  .user-pill .mail{
+    max-width:240px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .btn,
+  .trz-btn,
+  button.btn,
+  a.btn{
+    min-height:42px;
+  }
+
+  .trz-mobile-actions,
+  .actions,
+  .header-actions,
+  .top-actions,
+  .actions-row{
+    flex-direction:column !important;
+    width:100%;
+  }
+
+  .trz-mobile-actions .btn,
+  .actions .btn,
+  .header-actions .btn,
+  .top-actions .btn,
+  .actions-row .btn,
+  .trz-btn{
+    width:100%;
+    justify-content:center;
+    text-align:center;
+  }
+
+  .table-responsive table{
+    min-width:760px;
+  }
+
+  .table td,
+  .table th{
+    white-space:nowrap;
+  }
+
+  .container,
+  .container-fluid{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  input,
+  select,
+  textarea,
+  .form-control,
+  .form-select,
+  .inp,
+  .sel,
+  .trz-input{
+    font-size:16px !important;
+  }
+}
   </style>
 </head>
 
@@ -456,9 +594,21 @@
                 Asistencia
               </a>
             </li>
-            <li class="nav-item"></li>
-              <a class="dropdown-item" href="/admin/classes">Clases y grupos</a>
-              <a class="dropdown-item" href="/admin/classes/enrollments">Inscripciones a clases</a>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle {% if path.startswith('/admin/classes') %}active{% endif %}"
+                href="#"
+                id="navClasses"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Clases
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navClasses">
+                <li><a class="dropdown-item" href="/admin/classes">Clases y grupos</a></li>
+                <li><a class="dropdown-item" href="/admin/classes/enrollments">Inscripciones a clases</a></li>
+              </ul>
             </li>
 
             <li class="nav-item dropdown">

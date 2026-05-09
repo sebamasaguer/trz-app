@@ -91,6 +91,18 @@
   background: #1F2328;
   color: #f1f3f5;
 }
+@media (max-width: 768px){
+  .trz-wrap{padding:10px;}
+  .head{flex-direction:column;align-items:stretch;}
+  .head > div:last-child{
+    flex-direction:column;
+    width:100%;
+  }
+  .btn{width:100%;justify-content:center;}
+  .card{padding:12px;}
+  .table{min-width:860px;}
+  .grid-top{grid-template-columns:1fr;}
+}
 </style>
 
 <div class="trz-wrap">
@@ -213,7 +225,7 @@
       <div style="font-weight:900">Ejercicios de la rutina</div>
       <div class="muted" style="font-size:12px">El orden se asigna automáticamente al agregar cada ejercicio.</div>
     </div>
-
+    <div class="trz-mobile-scroll"></div>
     <table class="table" style="margin-top:10px">
       <thead>
         <tr>
@@ -281,6 +293,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   </div>
 
 </div>
